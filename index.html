@@ -1,0 +1,416 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>OídoLibre</title>
+
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible+Next:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet">
+
+  <style>
+    body { font-family: "Atkinson Hyperlegible Next", sans-serif; background:#F5F7FF; }
+    .material-symbols-outlined { font-size:34px; }
+    .screen { display:none; }
+    .screen.active { display:block; }
+    .nav-btn.active { background:#DBEAFE; color:#0053CD; border-radius:999px; }
+    input[type="range"] { width:100%; height:40px; accent-color:#0053CD; }
+  </style>
+</head>
+
+<body class="text-[#191B24]">
+
+<header class="fixed top-0 left-0 w-full h-16 bg-white shadow-sm z-50 flex items-center justify-between px-5">
+  <div class="flex items-center gap-2">
+    <span class="material-symbols-outlined text-[#0053CD]">hearing</span>
+    <h1 class="text-2xl font-extrabold">OídoLibre</h1>
+  </div>
+  <span class="material-symbols-outlined text-gray-600">account_circle</span>
+</header>
+
+<main class="pt-24 pb-40 px-4 max-w-md mx-auto">
+
+  <section id="control" class="screen active">
+    <h2 class="text-4xl font-extrabold mb-2">Control Principal</h2>
+    <p class="text-xl text-gray-500 mb-6">Ajusta cada oído por separado.</p>
+
+    <div class="grid grid-cols-2 gap-4 mb-6">
+      <div class="bg-[#0053CD] text-white rounded-[28px] p-5 text-center shadow-xl">
+        <span class="material-symbols-outlined text-6xl">hearing</span>
+        <h3 class="text-2xl font-bold mt-3">Oído Izquierdo</h3>
+        <p class="bg-white/20 rounded-full py-2 mt-3 font-bold">MÁS FUERTE</p>
+        <p id="leftDb" class="text-5xl font-extrabold mt-5">+14 dB</p>
+        <input id="leftSlider" type="range" min="0" max="30" value="14" class="mt-5">
+      </div>
+
+      <div class="bg-[#F57C00] text-white rounded-[28px] p-5 text-center shadow-xl">
+        <span class="material-symbols-outlined text-6xl">hearing</span>
+        <h3 class="text-2xl font-bold mt-3">Oído Derecho</h3>
+        <p class="bg-white/20 rounded-full py-2 mt-3 font-bold">NIVEL MEDIO</p>
+        <p id="rightDb" class="text-5xl font-extrabold mt-5">+8 dB</p>
+        <input id="rightSlider" type="range" min="0" max="30" value="8" class="mt-5">
+      </div>
+    </div>
+
+    <button id="micButton" class="w-full h-20 bg-[#2ECC71] text-white rounded-[28px] shadow-xl flex items-center justify-center gap-3">
+      <span class="material-symbols-outlined text-5xl">volume_up</span>
+      <div class="text-left">
+        <p id="micButtonText" class="text-2xl font-extrabold">ACTIVAR</p>
+        <p id="micStatus">Micrófono en tiempo real</p>
+      </div>
+    </button>
+
+    <button class="w-full h-16 bg-white text-[#0053CD] rounded-[22px] shadow mt-5 font-extrabold text-xl">
+      💾 Guardar configuración
+    </button>
+
+    <div class="bg-yellow-100 text-yellow-900 rounded-[24px] p-4 mt-5">
+      <p class="font-bold text-xl">Prueba inicial</p>
+      <p class="text-lg">Usa audífonos para evitar eco o chillido.</p>
+    </div>
+  </section>
+
+<section id="prueba" class="screen">
+  <h2 class="text-4xl font-extrabold mb-2">Prueba Auditiva</h2>
+  <p class="text-xl text-gray-500 mb-6">Escucha tonos suaves paso a paso.</p>
+
+  <div class="bg-white rounded-[28px] p-5 shadow mb-5">
+    <p class="text-2xl font-bold mb-2">Paso actual</p>
+    <p id="testStepText" class="text-xl text-gray-600">
+      Oído izquierdo · Frecuencia 1 de 6
+    </p>
+
+    <div class="w-full h-5 bg-gray-200 rounded-full mt-4">
+      <div id="testProgress" class="h-5 bg-[#0053CD] rounded-full" style="width: 16%"></div>
+    </div>
+  </div>
+
+  <button
+    id="playToneButton"
+    class="w-full h-20 bg-[#9C27B0] text-white rounded-[28px] text-2xl font-extrabold shadow mb-4"
+  >
+    🔊 REPRODUCIR TONO
+  </button>
+
+  <button
+    id="heardButton"
+    class="w-full h-20 bg-[#2ECC71] text-white rounded-[28px] text-2xl font-extrabold shadow mb-4"
+  >
+    ✅ SÍ LO ESCUCHÉ
+  </button>
+
+  <button
+    id="stopToneButton"
+    class="w-full h-16 bg-gray-200 rounded-[22px] text-xl font-bold mb-5"
+  >
+    ⏹ DETENER TONO
+  </button>
+
+  <div id="testResultCard" class="hidden bg-white rounded-[28px] p-5 shadow">
+    <h3 class="text-2xl font-extrabold mb-3">Resultados estimados</h3>
+
+    <p class="text-xl mb-2">
+      Oído izquierdo: recomendado <strong>+14 dB</strong>
+    </p>
+
+    <p class="text-xl mb-4">
+      Oído derecho: recomendado <strong>+8 dB</strong>
+    </p>
+
+    <button
+      id="applyResultsButton"
+      class="w-full h-16 bg-[#0053CD] text-white rounded-[22px] text-xl font-extrabold"
+    >
+      Aplicar resultados
+    </button>
+  </div>
+</section>
+
+  <section id="ajustes" class="screen">
+    <h2 class="text-4xl font-extrabold mb-2">Ajustes</h2>
+    <p class="text-xl text-gray-500 mb-6">Ecualizador simple.</p>
+
+    <div class="bg-white rounded-[28px] p-5 shadow">
+      <label class="text-xl font-bold">250 Hz Graves</label>
+      <input id="eqLow" type="range" min="-12" max="12" value="4">
+
+      <label class="text-xl font-bold">1 kHz Voz</label>
+      <input id="eqMid" type="range" min="-12" max="12" value="0">
+
+      <label class="text-xl font-bold">4 kHz Claridad</label>
+      <input id="eqHigh" type="range" min="-12" max="12" value="8">
+
+      <label class="text-xl font-bold">8 kHz Agudos</label>
+      <input id="eqAir" type="range" min="-12" max="12" value="-2">
+    </div>
+  </section>
+
+  <section id="perfiles" class="screen">
+    <h2 class="text-4xl font-extrabold mb-2">Perfiles</h2>
+    <p class="text-xl text-gray-500 mb-6">Elige dónde estás.</p>
+
+    <button class="w-full bg-white rounded-[28px] p-5 shadow mb-4 text-left">
+      <p class="text-2xl font-extrabold">🏠 Casa</p>
+      <p class="text-xl text-gray-500">Izq +14 dB / Der +8 dB</p>
+    </button>
+
+    <button class="w-full bg-white rounded-[28px] p-5 shadow mb-4 text-left">
+      <p class="text-2xl font-extrabold">🚶 Calle</p>
+      <p class="text-xl text-gray-500">Más reducción de ruido</p>
+    </button>
+
+    <div class="bg-red-100 text-red-800 rounded-[28px] p-5 mt-5">
+      <p class="text-xl font-bold">Aviso importante</p>
+      <p class="text-lg">Esta app no reemplaza un audífono médico certificado.</p>
+    </div>
+  </section>
+
+</main>
+
+<nav class="fixed bottom-0 left-0 w-full bg-white rounded-t-[32px] shadow-[0_-8px_30px_rgba(0,0,0,0.08)] px-3 pt-3 pb-6 z-50">
+  <div class="flex justify-around items-center">
+    <button onclick="showScreen('control', this)" class="nav-btn active flex flex-col items-center px-4 py-2">
+      <span class="material-symbols-outlined">graphic_eq</span><span class="font-bold text-sm">Control</span>
+    </button>
+    <button onclick="showScreen('prueba', this)" class="nav-btn flex flex-col items-center px-4 py-2 text-gray-500">
+      <span class="material-symbols-outlined">equalizer</span><span class="font-bold text-sm">Prueba</span>
+    </button>
+    <button onclick="showScreen('ajustes', this)" class="nav-btn flex flex-col items-center px-4 py-2 text-gray-500">
+      <span class="material-symbols-outlined">settings</span><span class="font-bold text-sm">Ajustes</span>
+    </button>
+    <button onclick="showScreen('perfiles', this)" class="nav-btn flex flex-col items-center px-4 py-2 text-gray-500">
+      <span class="material-symbols-outlined">person_search</span><span class="font-bold text-sm">Perfiles</span>
+    </button>
+  </div>
+</nav>
+
+<script>
+  function showScreen(screenId, button) {
+    document.querySelectorAll(".screen").forEach(screen => screen.classList.remove("active"));
+    document.getElementById(screenId).classList.add("active");
+
+    document.querySelectorAll(".nav-btn").forEach(btn => {
+      btn.classList.remove("active");
+      btn.classList.add("text-gray-500");
+    });
+
+    button.classList.add("active");
+    button.classList.remove("text-gray-500");
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }
+
+  const leftSlider = document.getElementById("leftSlider");
+  const rightSlider = document.getElementById("rightSlider");
+  const leftDb = document.getElementById("leftDb");
+  const rightDb = document.getElementById("rightDb");
+
+  leftSlider.addEventListener("input", () => {
+    leftDb.textContent = "+" + leftSlider.value + " dB";
+    updateGain();
+  });
+
+  rightSlider.addEventListener("input", () => {
+    rightDb.textContent = "+" + rightSlider.value + " dB";
+    updateGain();
+  });
+
+  let audioContext = null;
+  let micStream = null;
+  let source = null;
+  let gainNode = null;
+  let isMicActive = false;
+
+  const micButton = document.getElementById("micButton");
+  const micButtonText = document.getElementById("micButtonText");
+  const micStatus = document.getElementById("micStatus");
+
+  function dbToGain(db) {
+    return Math.pow(10, db / 20);
+  }
+
+  function updateGain() {
+    if (!gainNode) return;
+
+    const left = Number(leftSlider.value);
+    const right = Number(rightSlider.value);
+    const averageDb = (left + right) / 2;
+
+    gainNode.gain.value = dbToGain(averageDb);
+  }
+
+  async function startMic() {
+    try {
+      micStatus.textContent = "Pidiendo permiso de micrófono...";
+
+      micStream = await navigator.mediaDevices.getUserMedia({
+        audio: {
+          echoCancellation: false,
+          noiseSuppression: false,
+          autoGainControl: false
+        }
+      });
+
+      audioContext = new (window.AudioContext || window.webkitAudioContext)();
+
+      source = audioContext.createMediaStreamSource(micStream);
+      gainNode = audioContext.createGain();
+
+      updateGain();
+
+      source.connect(gainNode);
+      gainNode.connect(audioContext.destination);
+
+      isMicActive = true;
+
+      micButton.classList.remove("bg-[#2ECC71]");
+      micButton.classList.add("bg-red-600");
+
+      micButtonText.textContent = "DESACTIVAR";
+      micStatus.textContent = "Micrófono activo";
+    } catch (error) {
+      micStatus.textContent = "No se pudo activar el micrófono";
+      alert("No se pudo activar el micrófono. Revisa permisos del navegador.");
+      console.error(error);
+    }
+  }
+
+  function stopMic() {
+    if (micStream) {
+      micStream.getTracks().forEach(track => track.stop());
+    }
+
+    if (audioContext) {
+      audioContext.close();
+    }
+
+    micStream = null;
+    audioContext = null;
+    source = null;
+    gainNode = null;
+    isMicActive = false;
+
+    micButton.classList.remove("bg-red-600");
+    micButton.classList.add("bg-[#2ECC71]");
+
+    micButtonText.textContent = "ACTIVAR";
+    micStatus.textContent = "Micrófono apagado";
+  }
+
+  micButton.addEventListener("click", () => {
+    if (isMicActive) {
+      stopMic();
+    } else {
+      startMic();
+    }
+  });
+  let testAudioContext = null;
+let oscillator = null;
+let testGain = null;
+let currentTestStep = 0;
+
+const testSteps = [
+  { ear: "Oído izquierdo", freq: 250 },
+  { ear: "Oído izquierdo", freq: 1000 },
+  { ear: "Oído izquierdo", freq: 4000 },
+  { ear: "Oído derecho", freq: 250 },
+  { ear: "Oído derecho", freq: 1000 },
+  { ear: "Oído derecho", freq: 4000 },
+];
+
+const testStepText = document.getElementById("testStepText");
+const testProgress = document.getElementById("testProgress");
+const playToneButton = document.getElementById("playToneButton");
+const heardButton = document.getElementById("heardButton");
+const stopToneButton = document.getElementById("stopToneButton");
+const testResultCard = document.getElementById("testResultCard");
+const applyResultsButton = document.getElementById("applyResultsButton");
+
+function updateTestScreen() {
+  const step = testSteps[currentTestStep];
+
+  if (!step) {
+    testStepText.textContent = "Prueba terminada";
+    testProgress.style.width = "100%";
+    testResultCard.classList.remove("hidden");
+    return;
+  }
+
+  testStepText.textContent =
+    step.ear + " · " + step.freq + " Hz · Frecuencia " + (currentTestStep + 1) + " de 6";
+
+  testProgress.style.width = ((currentTestStep + 1) / testSteps.length) * 100 + "%";
+}
+
+function playTone() {
+  stopTone();
+
+  const step = testSteps[currentTestStep];
+  if (!step) return;
+
+  testAudioContext = new (window.AudioContext || window.webkitAudioContext)();
+
+  oscillator = testAudioContext.createOscillator();
+  testGain = testAudioContext.createGain();
+
+  oscillator.type = "sine";
+  oscillator.frequency.value = step.freq;
+
+  testGain.gain.value = 0.08;
+
+  oscillator.connect(testGain);
+  testGain.connect(testAudioContext.destination);
+
+  oscillator.start();
+
+  playToneButton.textContent = "🔊 SONANDO " + step.freq + " Hz";
+}
+
+function stopTone() {
+  if (oscillator) {
+    oscillator.stop();
+    oscillator.disconnect();
+    oscillator = null;
+  }
+
+  if (testAudioContext) {
+    testAudioContext.close();
+    testAudioContext = null;
+  }
+
+  playToneButton.textContent = "🔊 REPRODUCIR TONO";
+}
+
+function heardTone() {
+  stopTone();
+
+  currentTestStep++;
+
+  if (currentTestStep >= testSteps.length) {
+    currentTestStep = testSteps.length;
+    updateTestScreen();
+    return;
+  }
+
+  updateTestScreen();
+}
+
+playToneButton.addEventListener("click", playTone);
+stopToneButton.addEventListener("click", stopTone);
+heardButton.addEventListener("click", heardTone);
+
+applyResultsButton.addEventListener("click", () => {
+  leftSlider.value = 14;
+  rightSlider.value = 8;
+
+  leftDb.textContent = "+14 dB";
+  rightDb.textContent = "+8 dB";
+
+  updateGain();
+
+  alert("Resultados aplicados al Control Principal");
+});
+</script>
+
+</body>
+</html>
