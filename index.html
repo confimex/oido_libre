@@ -16,6 +16,15 @@
     .screen.active { display:block; }
     .nav-btn.active { background:#DBEAFE; color:#0053CD; border-radius:999px; }
     input[type="range"] { width:100%; height:40px; accent-color:#0053CD; }
+
+    .ear-left {
+      transform: scaleX(-1);
+      display: inline-block;
+    }
+
+    .ear-right {
+      display: inline-block;
+    }
   </style>
 </head>
 
@@ -36,8 +45,9 @@
     <p class="text-xl text-gray-500 mb-6">Ajusta cada oído por separado.</p>
 
     <div class="grid grid-cols-2 gap-4 mb-6">
+
       <div class="bg-[#0053CD] text-white rounded-[28px] p-5 text-center shadow-xl">
-        <span class="material-symbols-outlined text-6xl">hearing</span>
+        <span class="material-symbols-outlined text-6xl ear-left">hearing</span>
         <h3 class="text-2xl font-bold mt-3">Oído Izquierdo</h3>
         <p class="bg-white/20 rounded-full py-2 mt-3 font-bold">MÁS FUERTE</p>
         <p id="leftDb" class="text-5xl font-extrabold mt-5">+14 dB</p>
@@ -45,12 +55,13 @@
       </div>
 
       <div class="bg-[#F57C00] text-white rounded-[28px] p-5 text-center shadow-xl">
-        <span class="material-symbols-outlined text-6xl">hearing</span>
+        <span class="material-symbols-outlined text-6xl ear-right">hearing</span>
         <h3 class="text-2xl font-bold mt-3">Oído Derecho</h3>
         <p class="bg-white/20 rounded-full py-2 mt-3 font-bold">NIVEL MEDIO</p>
         <p id="rightDb" class="text-5xl font-extrabold mt-5">+8 dB</p>
         <input id="rightSlider" type="range" min="0" max="30" value="8" class="mt-5">
       </div>
+
     </div>
 
     <button id="micButton" class="w-full h-20 bg-[#2ECC71] text-white rounded-[28px] shadow-xl flex items-center justify-center gap-3">
@@ -71,61 +82,49 @@
     </div>
   </section>
 
-<section id="prueba" class="screen">
-  <h2 class="text-4xl font-extrabold mb-2">Prueba Auditiva</h2>
-  <p class="text-xl text-gray-500 mb-6">Escucha tonos suaves paso a paso.</p>
+  <section id="prueba" class="screen">
+    <h2 class="text-4xl font-extrabold mb-2">Prueba Auditiva</h2>
+    <p class="text-xl text-gray-500 mb-6">Escucha tonos suaves paso a paso.</p>
 
-  <div class="bg-white rounded-[28px] p-5 shadow mb-5">
-    <p class="text-2xl font-bold mb-2">Paso actual</p>
-    <p id="testStepText" class="text-xl text-gray-600">
-      Oído izquierdo · Frecuencia 1 de 6
-    </p>
+    <div class="bg-white rounded-[28px] p-5 shadow mb-5">
+      <p class="text-2xl font-bold mb-2">Paso actual</p>
+      <p id="testStepText" class="text-xl text-gray-600">
+        Oído izquierdo · Frecuencia 1 de 6
+      </p>
 
-    <div class="w-full h-5 bg-gray-200 rounded-full mt-4">
-      <div id="testProgress" class="h-5 bg-[#0053CD] rounded-full" style="width: 16%"></div>
+      <div class="w-full h-5 bg-gray-200 rounded-full mt-4">
+        <div id="testProgress" class="h-5 bg-[#0053CD] rounded-full" style="width: 16%"></div>
+      </div>
     </div>
-  </div>
 
-  <button
-    id="playToneButton"
-    class="w-full h-20 bg-[#9C27B0] text-white rounded-[28px] text-2xl font-extrabold shadow mb-4"
-  >
-    🔊 REPRODUCIR TONO
-  </button>
-
-  <button
-    id="heardButton"
-    class="w-full h-20 bg-[#2ECC71] text-white rounded-[28px] text-2xl font-extrabold shadow mb-4"
-  >
-    ✅ SÍ LO ESCUCHÉ
-  </button>
-
-  <button
-    id="stopToneButton"
-    class="w-full h-16 bg-gray-200 rounded-[22px] text-xl font-bold mb-5"
-  >
-    ⏹ DETENER TONO
-  </button>
-
-  <div id="testResultCard" class="hidden bg-white rounded-[28px] p-5 shadow">
-    <h3 class="text-2xl font-extrabold mb-3">Resultados estimados</h3>
-
-    <p class="text-xl mb-2">
-      Oído izquierdo: recomendado <strong>+14 dB</strong>
-    </p>
-
-    <p class="text-xl mb-4">
-      Oído derecho: recomendado <strong>+8 dB</strong>
-    </p>
-
-    <button
-      id="applyResultsButton"
-      class="w-full h-16 bg-[#0053CD] text-white rounded-[22px] text-xl font-extrabold"
-    >
-      Aplicar resultados
+    <button id="playToneButton" class="w-full h-20 bg-[#9C27B0] text-white rounded-[28px] text-2xl font-extrabold shadow mb-4">
+      🔊 REPRODUCIR TONO
     </button>
-  </div>
-</section>
+
+    <button id="heardButton" class="w-full h-20 bg-[#2ECC71] text-white rounded-[28px] text-2xl font-extrabold shadow mb-4">
+      ✅ SÍ LO ESCUCHÉ
+    </button>
+
+    <button id="stopToneButton" class="w-full h-16 bg-gray-200 rounded-[22px] text-xl font-bold mb-5">
+      ⏹ DETENER TONO
+    </button>
+
+    <div id="testResultCard" class="hidden bg-white rounded-[28px] p-5 shadow">
+      <h3 class="text-2xl font-extrabold mb-3">Resultados estimados</h3>
+
+      <p class="text-xl mb-2">
+        Oído izquierdo: recomendado <strong>+14 dB</strong>
+      </p>
+
+      <p class="text-xl mb-4">
+        Oído derecho: recomendado <strong>+8 dB</strong>
+      </p>
+
+      <button id="applyResultsButton" class="w-full h-16 bg-[#0053CD] text-white rounded-[22px] text-xl font-extrabold">
+        Aplicar resultados
+      </button>
+    </div>
+  </section>
 
   <section id="ajustes" class="screen">
     <h2 class="text-4xl font-extrabold mb-2">Ajustes</h2>
@@ -205,6 +204,35 @@
   const leftDb = document.getElementById("leftDb");
   const rightDb = document.getElementById("rightDb");
 
+  const micButton = document.getElementById("micButton");
+  const micButtonText = document.getElementById("micButtonText");
+  const micStatus = document.getElementById("micStatus");
+
+  let audioContext = null;
+  let micStream = null;
+  let source = null;
+  let leftGainNode = null;
+  let rightGainNode = null;
+  let mergerNode = null;
+  let isMicActive = false;
+
+  function dbToGain(db) {
+    return Math.pow(10, db / 20);
+  }
+
+  function updateGain() {
+    const left = Number(leftSlider.value);
+    const right = Number(rightSlider.value);
+
+    if (leftGainNode) {
+      leftGainNode.gain.value = dbToGain(left);
+    }
+
+    if (rightGainNode) {
+      rightGainNode.gain.value = dbToGain(right);
+    }
+  }
+
   leftSlider.addEventListener("input", () => {
     leftDb.textContent = "+" + leftSlider.value + " dB";
     updateGain();
@@ -214,30 +242,6 @@
     rightDb.textContent = "+" + rightSlider.value + " dB";
     updateGain();
   });
-
-  let audioContext = null;
-  let micStream = null;
-  let source = null;
-  let gainNode = null;
-  let isMicActive = false;
-
-  const micButton = document.getElementById("micButton");
-  const micButtonText = document.getElementById("micButtonText");
-  const micStatus = document.getElementById("micStatus");
-
-  function dbToGain(db) {
-    return Math.pow(10, db / 20);
-  }
-
-  function updateGain() {
-    if (!gainNode) return;
-
-    const left = Number(leftSlider.value);
-    const right = Number(rightSlider.value);
-    const averageDb = (left + right) / 2;
-
-    gainNode.gain.value = dbToGain(averageDb);
-  }
 
   async function startMic() {
     try {
@@ -254,12 +258,20 @@
       audioContext = new (window.AudioContext || window.webkitAudioContext)();
 
       source = audioContext.createMediaStreamSource(micStream);
-      gainNode = audioContext.createGain();
+
+      leftGainNode = audioContext.createGain();
+      rightGainNode = audioContext.createGain();
+      mergerNode = audioContext.createChannelMerger(2);
 
       updateGain();
 
-      source.connect(gainNode);
-      gainNode.connect(audioContext.destination);
+      source.connect(leftGainNode);
+      source.connect(rightGainNode);
+
+      leftGainNode.connect(mergerNode, 0, 0);
+      rightGainNode.connect(mergerNode, 0, 1);
+
+      mergerNode.connect(audioContext.destination);
 
       isMicActive = true;
 
@@ -267,7 +279,7 @@
       micButton.classList.add("bg-red-600");
 
       micButtonText.textContent = "DESACTIVAR";
-      micStatus.textContent = "Micrófono activo";
+      micStatus.textContent = "Micrófono activo · izquierdo y derecho separados";
     } catch (error) {
       micStatus.textContent = "No se pudo activar el micrófono";
       alert("No se pudo activar el micrófono. Revisa permisos del navegador.");
@@ -280,6 +292,22 @@
       micStream.getTracks().forEach(track => track.stop());
     }
 
+    if (source) {
+      try { source.disconnect(); } catch (error) {}
+    }
+
+    if (leftGainNode) {
+      try { leftGainNode.disconnect(); } catch (error) {}
+    }
+
+    if (rightGainNode) {
+      try { rightGainNode.disconnect(); } catch (error) {}
+    }
+
+    if (mergerNode) {
+      try { mergerNode.disconnect(); } catch (error) {}
+    }
+
     if (audioContext) {
       audioContext.close();
     }
@@ -287,7 +315,9 @@
     micStream = null;
     audioContext = null;
     source = null;
-    gainNode = null;
+    leftGainNode = null;
+    rightGainNode = null;
+    mergerNode = null;
     isMicActive = false;
 
     micButton.classList.remove("bg-red-600");
@@ -304,112 +334,153 @@
       startMic();
     }
   });
+
   let testAudioContext = null;
-let oscillator = null;
-let testGain = null;
-let currentTestStep = 0;
+  let oscillator = null;
+  let testGain = null;
+  let testPanner = null;
+  let currentTestStep = 0;
 
-const testSteps = [
-  { ear: "Oído izquierdo", freq: 250 },
-  { ear: "Oído izquierdo", freq: 1000 },
-  { ear: "Oído izquierdo", freq: 4000 },
-  { ear: "Oído derecho", freq: 250 },
-  { ear: "Oído derecho", freq: 1000 },
-  { ear: "Oído derecho", freq: 4000 },
-];
+  const testSteps = [
+    { ear: "Oído izquierdo", side: "left", freq: 250 },
+    { ear: "Oído izquierdo", side: "left", freq: 1000 },
+    { ear: "Oído izquierdo", side: "left", freq: 4000 },
+    { ear: "Oído derecho", side: "right", freq: 250 },
+    { ear: "Oído derecho", side: "right", freq: 1000 },
+    { ear: "Oído derecho", side: "right", freq: 4000 },
+  ];
 
-const testStepText = document.getElementById("testStepText");
-const testProgress = document.getElementById("testProgress");
-const playToneButton = document.getElementById("playToneButton");
-const heardButton = document.getElementById("heardButton");
-const stopToneButton = document.getElementById("stopToneButton");
-const testResultCard = document.getElementById("testResultCard");
-const applyResultsButton = document.getElementById("applyResultsButton");
+  const testStepText = document.getElementById("testStepText");
+  const testProgress = document.getElementById("testProgress");
+  const playToneButton = document.getElementById("playToneButton");
+  const heardButton = document.getElementById("heardButton");
+  const stopToneButton = document.getElementById("stopToneButton");
+  const testResultCard = document.getElementById("testResultCard");
+  const applyResultsButton = document.getElementById("applyResultsButton");
 
-function updateTestScreen() {
-  const step = testSteps[currentTestStep];
+  function updateTestScreen() {
+    const step = testSteps[currentTestStep];
 
-  if (!step) {
-    testStepText.textContent = "Prueba terminada";
-    testProgress.style.width = "100%";
-    testResultCard.classList.remove("hidden");
-    return;
+    if (!step) {
+      testStepText.textContent = "Prueba terminada";
+      testProgress.style.width = "100%";
+      testResultCard.classList.remove("hidden");
+      return;
+    }
+
+    testStepText.textContent =
+      step.ear + " · " + step.freq + " Hz · Frecuencia " + (currentTestStep + 1) + " de 6";
+
+    testProgress.style.width = ((currentTestStep + 1) / testSteps.length) * 100 + "%";
   }
 
-  testStepText.textContent =
-    step.ear + " · " + step.freq + " Hz · Frecuencia " + (currentTestStep + 1) + " de 6";
+  function playTone() {
+    stopTone();
 
-  testProgress.style.width = ((currentTestStep + 1) / testSteps.length) * 100 + "%";
-}
+    const step = testSteps[currentTestStep];
+    if (!step) return;
 
-function playTone() {
-  stopTone();
+    testAudioContext = new (window.AudioContext || window.webkitAudioContext)();
 
-  const step = testSteps[currentTestStep];
-  if (!step) return;
+    oscillator = testAudioContext.createOscillator();
+    testGain = testAudioContext.createGain();
 
-  testAudioContext = new (window.AudioContext || window.webkitAudioContext)();
+    if (testAudioContext.createStereoPanner) {
+      testPanner = testAudioContext.createStereoPanner();
+    } else {
+      testPanner = null;
+    }
 
-  oscillator = testAudioContext.createOscillator();
-  testGain = testAudioContext.createGain();
+    oscillator.type = "sine";
+    oscillator.frequency.value = step.freq;
+    testGain.gain.value = 0.08;
 
-  oscillator.type = "sine";
-  oscillator.frequency.value = step.freq;
+    oscillator.connect(testGain);
 
-  testGain.gain.value = 0.08;
+    if (testPanner) {
+      if (step.side === "left") {
+        testPanner.pan.value = -1;
+      }
 
-  oscillator.connect(testGain);
-  testGain.connect(testAudioContext.destination);
+      if (step.side === "right") {
+        testPanner.pan.value = 1;
+      }
 
-  oscillator.start();
+      testGain.connect(testPanner);
+      testPanner.connect(testAudioContext.destination);
+    } else {
+      testGain.connect(testAudioContext.destination);
+      alert("Este navegador no permite separar completamente izquierda y derecha.");
+    }
 
-  playToneButton.textContent = "🔊 SONANDO " + step.freq + " Hz";
-}
+    oscillator.start();
 
-function stopTone() {
-  if (oscillator) {
-    oscillator.stop();
-    oscillator.disconnect();
-    oscillator = null;
+    if (step.side === "left") {
+      playToneButton.textContent = "🔊 SONANDO EN OÍDO IZQUIERDO";
+    } else {
+      playToneButton.textContent = "🔊 SONANDO EN OÍDO DERECHO";
+    }
   }
 
-  if (testAudioContext) {
-    testAudioContext.close();
-    testAudioContext = null;
+  function stopTone() {
+    if (oscillator) {
+      try {
+        oscillator.stop();
+      } catch (error) {}
+
+      oscillator.disconnect();
+      oscillator = null;
+    }
+
+    if (testGain) {
+      testGain.disconnect();
+      testGain = null;
+    }
+
+    if (testPanner) {
+      testPanner.disconnect();
+      testPanner = null;
+    }
+
+    if (testAudioContext) {
+      testAudioContext.close();
+      testAudioContext = null;
+    }
+
+    playToneButton.textContent = "🔊 REPRODUCIR TONO";
   }
 
-  playToneButton.textContent = "🔊 REPRODUCIR TONO";
-}
+  function heardTone() {
+    stopTone();
 
-function heardTone() {
-  stopTone();
+    currentTestStep++;
 
-  currentTestStep++;
+    if (currentTestStep >= testSteps.length) {
+      currentTestStep = testSteps.length;
+      updateTestScreen();
+      return;
+    }
 
-  if (currentTestStep >= testSteps.length) {
-    currentTestStep = testSteps.length;
     updateTestScreen();
-    return;
   }
+
+  playToneButton.addEventListener("click", playTone);
+  stopToneButton.addEventListener("click", stopTone);
+  heardButton.addEventListener("click", heardTone);
+
+  applyResultsButton.addEventListener("click", () => {
+    leftSlider.value = 14;
+    rightSlider.value = 8;
+
+    leftDb.textContent = "+14 dB";
+    rightDb.textContent = "+8 dB";
+
+    updateGain();
+
+    alert("Resultados aplicados al Control Principal");
+  });
 
   updateTestScreen();
-}
-
-playToneButton.addEventListener("click", playTone);
-stopToneButton.addEventListener("click", stopTone);
-heardButton.addEventListener("click", heardTone);
-
-applyResultsButton.addEventListener("click", () => {
-  leftSlider.value = 14;
-  rightSlider.value = 8;
-
-  leftDb.textContent = "+14 dB";
-  rightDb.textContent = "+8 dB";
-
-  updateGain();
-
-  alert("Resultados aplicados al Control Principal");
-});
 </script>
 
 </body>
