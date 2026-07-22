@@ -49,7 +49,7 @@
         <span class="material-symbols-outlined text-6xl ear-left">hearing</span>
         <h3 class="text-2xl font-bold mt-3">Oído Izquierdo</h3>
         <p class="bg-white/20 rounded-full py-2 mt-3 font-bold">MÁS FUERTE</p>
-        <p id="leftDb" class="text-5xl font-extrabold mt-5">+14 dB</p>
+        <p id="leftDb" class="text-5xl font-extrabold mt-5">+14 nivel</p>
         <input id="leftSlider" type="range" min="0" max="40" value="14" class="mt-5">
       </div>
 
@@ -57,9 +57,11 @@
         <span class="material-symbols-outlined text-6xl ear-right">hearing</span>
         <h3 class="text-2xl font-bold mt-3">Oído Derecho</h3>
         <p class="bg-white/20 rounded-full py-2 mt-3 font-bold">NIVEL MEDIO</p>
-        <p id="rightDb" class="text-5xl font-extrabold mt-5">+8 dB</p>
+        <p id="rightDb" class="text-5xl font-extrabold mt-5">+8 nivel</p>
         <input id="rightSlider" type="range" min="0" max="40" value="8" class="mt-5">
       </div>
+
+    </div>
 
     <button id="micButton" class="w-full h-20 bg-[#2ECC71] text-white rounded-[28px] shadow-xl flex items-center justify-center gap-3">
       <span class="material-symbols-outlined text-5xl">volume_up</span>
@@ -69,7 +71,7 @@
       </div>
     </button>
 
-    <button class="w-full h-16 bg-white text-[#0053CD] rounded-[22px] shadow mt-5 font-extrabold text-xl">
+    <button id="saveSettingsButton" class="w-full h-16 bg-white text-[#0053CD] rounded-[22px] shadow mt-5 font-extrabold text-xl">
       💾 Guardar configuración
     </button>
 
@@ -221,24 +223,64 @@
   let leftGainNode = null;
   let rightGainNode = null;
   let mergerNode = null;
+  let limiterNode = null;
   let isMicActive = false;
 
+  const SETTINGS_KEY = "oidolibre-config-v1";
+  const MAX_SAFE_GAIN = 4;
+  const START_RAMP_SECONDS = 1.5;
+
   function dbToGain(db) {
-    return Math.pow(10, db / 20);
+    return Math.min(Math.pow(10, db / 20), MAX_SAFE_GAIN);
   }
 
-  function updateGain() {
-    if (leftGainNode) leftGainNode.gain.value = dbToGain(Number(leftSlider.value));
-    if (rightGainNode) rightGainNode.gain.value = dbToGain(Number(rightSlider.value));
+  function updateGain(rampSeconds = 0.08) {
+    if (!audioContext) return;
+
+    const now = audioContext.currentTime;
+    const setGain = (node, value) => {
+      if (!node) return;
+      node.gain.cancelScheduledValues(now);
+      node.gain.setValueAtTime(Math.max(node.gain.value, 0.0001), now);
+      node.gain.exponentialRampToValueAtTime(value, now + rampSeconds);
+    };
+
+    setGain(leftGainNode, dbToGain(Number(leftSlider.value)));
+    setGain(rightGainNode, dbToGain(Number(rightSlider.value)));
+  }
+
+  function refreshLevelLabels() {
+    leftDb.textContent = "+" + leftSlider.value + " nivel";
+    rightDb.textContent = "+" + rightSlider.value + " nivel";
+  }
+
+  function loadSettings() {
+    try {
+      const saved = JSON.parse(localStorage.getItem(SETTINGS_KEY));
+      if (!saved) return;
+      if (Number.isFinite(saved.left)) leftSlider.value = saved.left;
+      if (Number.isFinite(saved.right)) rightSlider.value = saved.right;
+      refreshLevelLabels();
+    } catch (error) {
+      console.warn("No se pudo recuperar la configuración guardada", error);
+    }
+  }
+
+  function saveSettings(showConfirmation = true) {
+    localStorage.setItem(SETTINGS_KEY, JSON.stringify({
+      left: Number(leftSlider.value),
+      right: Number(rightSlider.value)
+    }));
+    if (showConfirmation) alert("Configuración guardada");
   }
 
   leftSlider.addEventListener("input", () => {
-    leftDb.textContent = "+" + leftSlider.value + " dB";
+    refreshLevelLabels();
     updateGain();
   });
 
   rightSlider.addEventListener("input", () => {
-    rightDb.textContent = "+" + rightSlider.value + " dB";
+    refreshLevelLabels();
     updateGain();
   });
 
@@ -260,8 +302,16 @@
       leftGainNode = audioContext.createGain();
       rightGainNode = audioContext.createGain();
       mergerNode = audioContext.createChannelMerger(2);
+      limiterNode = audioContext.createDynamicsCompressor();
 
-      updateGain();
+      leftGainNode.gain.setValueAtTime(0.0001, audioContext.currentTime);
+      rightGainNode.gain.setValueAtTime(0.0001, audioContext.currentTime);
+
+      limiterNode.threshold.setValueAtTime(-6, audioContext.currentTime);
+      limiterNode.knee.setValueAtTime(0, audioContext.currentTime);
+      limiterNode.ratio.setValueAtTime(20, audioContext.currentTime);
+      limiterNode.attack.setValueAtTime(0.003, audioContext.currentTime);
+      limiterNode.release.setValueAtTime(0.25, audioContext.currentTime);
 
       source.connect(leftGainNode);
       source.connect(rightGainNode);
@@ -274,7 +324,10 @@
         rightGainNode.connect(mergerNode, 0, 1);
       }
 
-      mergerNode.connect(audioContext.destination);
+      mergerNode.connect(limiterNode);
+      limiterNode.connect(audioContext.destination);
+
+      updateGain(START_RAMP_SECONDS);
 
       isMicActive = true;
 
@@ -295,6 +348,7 @@
     if (leftGainNode) try { leftGainNode.disconnect(); } catch (error) {}
     if (rightGainNode) try { rightGainNode.disconnect(); } catch (error) {}
     if (mergerNode) try { mergerNode.disconnect(); } catch (error) {}
+    if (limiterNode) try { limiterNode.disconnect(); } catch (error) {}
     if (audioContext) audioContext.close();
 
     micStream = null;
@@ -303,6 +357,7 @@
     leftGainNode = null;
     rightGainNode = null;
     mergerNode = null;
+    limiterNode = null;
     isMicActive = false;
 
     micButton.classList.remove("bg-red-600");
@@ -380,7 +435,7 @@
     const level = levelSteps[currentLevelIndex];
 
     testStepText.textContent =
-      step.ear + " · " + step.freq + " Hz · Nivel " + level.label + " · " + level.db + " dB";
+      step.ear + " · " + step.freq + " Hz · " + level.label + " · Nivel " + level.db;
 
     testProgress.style.width = ((currentTestStep + 1) / testSteps.length) * 100 + "%";
   }
@@ -424,7 +479,7 @@
 
     oscillator.start();
 
-    playToneButton.textContent = "🔊 SONANDO · " + level.db + " dB";
+    playToneButton.textContent = "🔊 SONANDO · NIVEL " + level.db;
   }
 
   function stopTone() {
@@ -517,11 +572,11 @@
       </p>
 
       <p class="text-xl mb-2">
-        Oído izquierdo: <strong>+${leftAverage} dB</strong>
+        Oído izquierdo: <strong>nivel ${leftAverage}</strong>
       </p>
 
       <p class="text-xl mb-4">
-        Oído derecho: <strong>+${rightAverage} dB</strong>
+        Oído derecho: <strong>nivel ${rightAverage}</strong>
       </p>
 
       <button
@@ -536,10 +591,10 @@
       leftSlider.value = leftAverage;
       rightSlider.value = rightAverage;
 
-      leftDb.textContent = "+" + leftAverage + " dB";
-      rightDb.textContent = "+" + rightAverage + " dB";
+      refreshLevelLabels();
 
       updateGain();
+      saveSettings(false);
 
       alert("Configuración aplicada al Control Principal");
     });
@@ -557,15 +612,16 @@
   });
   const profileCasa = document.getElementById("profileCasa");
 const profileCalle = document.getElementById("profileCalle");
+const saveSettingsButton = document.getElementById("saveSettingsButton");
 
 function aplicarPerfil(nombre, leftValue, rightValue) {
   leftSlider.value = leftValue;
   rightSlider.value = rightValue;
 
-  leftDb.textContent = "+" + leftValue + " dB";
-  rightDb.textContent = "+" + rightValue + " dB";
+  refreshLevelLabels();
 
   updateGain();
+  saveSettings(false);
 
   alert("Perfil " + nombre + " aplicado");
 }
@@ -577,6 +633,19 @@ profileCasa.addEventListener("click", () => {
 profileCalle.addEventListener("click", () => {
   aplicarPerfil("Calle", 24, 22);
 });
+
+saveSettingsButton.addEventListener("click", () => saveSettings(true));
+
+document.addEventListener("visibilitychange", () => {
+  if (document.hidden && isMicActive) stopMic();
+});
+
+window.addEventListener("pagehide", () => {
+  if (isMicActive) stopMic();
+});
+
+loadSettings();
+refreshLevelLabels();
 
 </script>
 
