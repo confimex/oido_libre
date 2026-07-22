@@ -120,6 +120,16 @@ La prueba auditiva ahora contiene los niveles:
 
 Los controles izquierdo y derecho también permiten ajustar hasta el nivel 45. Los niveles 40 y 45 amplían el margen de prueba, pero continúan pasando por el limitador protector. Estos números siguen siendo niveles internos y no decibeles físicamente calibrados.
 
+## Piedrita 4 — Micrófono y canales Android
+
+La versión Android 1.2 incorpora:
+
+- El permiso `MODIFY_AUDIO_SETTINGS` requerido por Capacitor para entregar el micrófono al WebView.
+- La orientación normal de los canales: izquierdo sale por el oído izquierdo y derecho por el oído derecho.
+- Un mensaje de error propio de la aplicación que muestra el nombre técnico del fallo cuando Android rechaza el micrófono.
+
+La prueba auditiva realizada con la versión 1.1 debe repetirse, porque los canales estaban intercambiados y sus resultados por oído no son válidos para ajustar el perfil definitivo.
+
 ## Próximas piedritas
 
 1. Subir la versión 1.1 al repositorio conectado con Vercel.

@@ -197,7 +197,7 @@
 </nav>
 
 <script>
-  const CANALES_INVERTIDOS = true;
+  const CANALES_INVERTIDOS = false;
 
   function showScreen(screenId, button) {
     document.querySelectorAll(".screen").forEach(screen => screen.classList.remove("active"));
@@ -426,7 +426,8 @@
       micStatus.textContent = "Micrófono activo";
     } catch (error) {
       micStatus.textContent = "No se pudo activar el micrófono";
-      alert("No se pudo activar el micrófono. Revisa permisos del navegador.");
+      const detail = error?.name ? "\n\nDetalle: " + error.name : "";
+      alert("No se pudo activar el micrófono. Revisa el permiso de Oído Libre." + detail);
       console.error(error);
     }
   }
