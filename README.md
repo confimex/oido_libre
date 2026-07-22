@@ -100,9 +100,9 @@ La primera corrección incluye:
 - Si aparece un sonido incómodo o demasiado fuerte, desactivar inmediatamente.
 - Los niveles mostrados por la aplicación no representan todavía decibeles reales.
 
-## Regla pendiente OL-001 — Audífonos conectados
+## Piedrita 2 — OL-001 Audífonos conectados
 
-La siguiente piedrita será trabajar en la parte Android para:
+La versión 1.1 incorpora un componente nativo de Android para:
 
 - Detectar si existen audífonos conectados.
 - Mostrar qué salida de audio está utilizando el teléfono.
@@ -110,13 +110,23 @@ La siguiente piedrita será trabajar en la parte Android para:
 - Apagarla si los audífonos se desconectan.
 - Diferenciar entre audífonos alámbricos y Bluetooth.
 
+Esta protección funciona dentro de la aplicación Android. Cuando se abre `index.html` directamente en un navegador, aparece el aviso **Modo navegador** y la detección automática no está disponible.
+
+## Piedrita 3 — Prueba ampliada hasta nivel 45
+
+La prueba auditiva ahora contiene los niveles:
+
+`5, 10, 15, 20, 25, 30, 35, 40 y 45`
+
+Los controles izquierdo y derecho también permiten ajustar hasta el nivel 45. Los niveles 40 y 45 amplían el margen de prueba, pero continúan pasando por el limitador protector. Estos números siguen siendo niveles internos y no decibeles físicamente calibrados.
+
 ## Próximas piedritas
 
-1. OL-001: detectar y vigilar la conexión de audífonos.
-2. Ampliar la prueba auditiva del nivel 35 al 45, conservando un límite protector.
-3. Revisar qué micrófono utiliza el teléfono.
-4. Generar el primer APK de prueba.
-5. Probarlo en un teléfono real con audífonos alámbricos.
+1. Subir la versión 1.1 al repositorio conectado con Vercel.
+2. Generar el primer APK de prueba desde Android Studio.
+3. Probar OL-001 en un teléfono real con audífonos alámbricos y Bluetooth.
+4. Revisar qué micrófono utiliza el teléfono.
+5. Preparar los recursos visuales para funcionamiento sin Internet.
 6. Documentar los modelos de audífonos recomendados.
 
 ## Respaldo antes de modificar
@@ -136,8 +146,8 @@ No enviar solamente una fotografía de la pantalla ni copiar fragmentos aislados
 - Proyecto web: disponible.
 - Proyecto Android con Capacitor: disponible.
 - Compilación: comprobada.
-- APK instalable para pruebas: pendiente.
-- Detección nativa de audífonos: pendiente.
+- APK instalable para pruebas: listo para generarse desde Android Studio.
+- Detección nativa de audífonos: incorporada; pendiente de prueba física.
 - Publicación comercial: no iniciada.
 
 ---

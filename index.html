@@ -50,7 +50,7 @@
         <h3 class="text-2xl font-bold mt-3">Oído Izquierdo</h3>
         <p class="bg-white/20 rounded-full py-2 mt-3 font-bold">MÁS FUERTE</p>
         <p id="leftDb" class="text-5xl font-extrabold mt-5">+14 nivel</p>
-        <input id="leftSlider" type="range" min="0" max="40" value="14" class="mt-5">
+        <input id="leftSlider" type="range" min="0" max="45" value="14" class="mt-5">
       </div>
 
       <div class="bg-[#F57C00] text-white rounded-[28px] p-5 text-center shadow-xl">
@@ -58,9 +58,14 @@
         <h3 class="text-2xl font-bold mt-3">Oído Derecho</h3>
         <p class="bg-white/20 rounded-full py-2 mt-3 font-bold">NIVEL MEDIO</p>
         <p id="rightDb" class="text-5xl font-extrabold mt-5">+8 nivel</p>
-        <input id="rightSlider" type="range" min="0" max="40" value="8" class="mt-5">
+        <input id="rightSlider" type="range" min="0" max="45" value="8" class="mt-5">
       </div>
 
+    </div>
+
+    <div id="audioRouteCard" class="bg-yellow-100 text-yellow-900 rounded-[24px] p-4 mb-5">
+      <p id="audioRouteTitle" class="font-extrabold text-xl">⌛ Revisando audífonos...</p>
+      <p id="audioRouteDetail" class="text-lg">La amplificación permanecerá apagada mientras revisamos la conexión.</p>
     </div>
 
     <button id="micButton" class="w-full h-20 bg-[#2ECC71] text-white rounded-[28px] shadow-xl flex items-center justify-center gap-3">
@@ -216,6 +221,9 @@
   const micButton = document.getElementById("micButton");
   const micButtonText = document.getElementById("micButtonText");
   const micStatus = document.getElementById("micStatus");
+  const audioRouteCard = document.getElementById("audioRouteCard");
+  const audioRouteTitle = document.getElementById("audioRouteTitle");
+  const audioRouteDetail = document.getElementById("audioRouteDetail");
 
   let audioContext = null;
   let micStream = null;
@@ -229,6 +237,81 @@
   const SETTINGS_KEY = "oidolibre-config-v1";
   const MAX_SAFE_GAIN = 4;
   const START_RAMP_SECONDS = 1.5;
+  let headphonesConnected = false;
+
+  function isNativeAndroidApp() {
+    return Boolean(window.Capacitor?.isNativePlatform?.());
+  }
+
+  function audioRoutePlugin() {
+    return window.Capacitor?.Plugins?.AudioRoute || null;
+  }
+
+  function showAudioRoute(route) {
+    headphonesConnected = Boolean(route?.headphonesConnected);
+
+    audioRouteCard.classList.remove("bg-yellow-100", "text-yellow-900", "bg-green-100", "text-green-900", "bg-red-100", "text-red-800");
+
+    if (!isNativeAndroidApp()) {
+      audioRouteCard.classList.add("bg-yellow-100", "text-yellow-900");
+      audioRouteTitle.textContent = "⚠ Modo navegador";
+      audioRouteDetail.textContent = "La detección automática funcionará en la aplicación Android. Usa audífonos antes de activar.";
+      headphonesConnected = true;
+      return;
+    }
+
+    if (headphonesConnected) {
+      audioRouteCard.classList.add("bg-green-100", "text-green-900");
+      audioRouteTitle.textContent = "✓ Audífonos conectados correctamente";
+      audioRouteDetail.textContent = route.label || "Salida de audio segura";
+      micButton.disabled = false;
+      micButton.classList.remove("opacity-50");
+      return;
+    }
+
+    audioRouteCard.classList.add("bg-red-100", "text-red-800");
+    audioRouteTitle.textContent = "⚠ Conecta tus audífonos";
+    audioRouteDetail.textContent = "La amplificación está bloqueada para evitar que el sonido salga por la bocina.";
+    micButton.disabled = true;
+    micButton.classList.add("opacity-50");
+
+    if (isMicActive) {
+      stopMic();
+      alert("Los audífonos se desconectaron. La amplificación se apagó por seguridad.");
+    }
+  }
+
+  async function refreshAudioRoute() {
+    const plugin = audioRoutePlugin();
+
+    if (!isNativeAndroidApp()) {
+      showAudioRoute(null);
+      return true;
+    }
+
+    if (!plugin) {
+      showAudioRoute({ headphonesConnected: false });
+      return false;
+    }
+
+    try {
+      const route = await plugin.getAudioRoute();
+      showAudioRoute(route);
+      return Boolean(route.headphonesConnected);
+    } catch (error) {
+      console.error("No se pudo revisar la salida de audio", error);
+      showAudioRoute({ headphonesConnected: false });
+      return false;
+    }
+  }
+
+  async function monitorAudioRoute() {
+    await refreshAudioRoute();
+    const plugin = audioRoutePlugin();
+    if (plugin) {
+      await plugin.addListener("audioRouteChanged", route => showAudioRoute(route));
+    }
+  }
 
   function dbToGain(db) {
     return Math.min(Math.pow(10, db / 20), MAX_SAFE_GAIN);
@@ -286,6 +369,12 @@
 
   async function startMic() {
     try {
+      const safeRoute = await refreshAudioRoute();
+      if (!safeRoute) {
+        alert("Conecta audífonos antes de activar Oído Libre.");
+        return;
+      }
+
       micStatus.textContent = "Pidiendo permiso de micrófono...";
 
       micStream = await navigator.mediaDevices.getUserMedia({
@@ -385,7 +474,9 @@
     { label: "Medio", db: 20, gain: 0.14 },
     { label: "Medio alto", db: 25, gain: 0.20 },
     { label: "Alto", db: 30, gain: 0.28 },
-    { label: "Muy alto", db: 35, gain: 0.38 }
+    { label: "Muy alto", db: 35, gain: 0.38 },
+    { label: "Fuerte", db: 40, gain: 0.50 },
+    { label: "Máximo de prueba", db: 45, gain: 0.62 }
   ];
 
   const testSteps = [
@@ -646,6 +737,7 @@ window.addEventListener("pagehide", () => {
 
 loadSettings();
 refreshLevelLabels();
+monitorAudioRoute();
 
 </script>
 

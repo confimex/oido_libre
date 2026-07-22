@@ -1,7 +1,7 @@
 <?xml version='1.0' encoding='utf-8'?>
 <resources>
-    <string name="app_name">oidolibre</string>
-    <string name="title_activity_main">oidolibre</string>
+    <string name="app_name">Oído Libre</string>
+    <string name="title_activity_main">Oído Libre</string>
     <string name="package_name">com.oidolibre.app</string>
     <string name="custom_url_scheme">com.oidolibre.app</string>
 </resources>
