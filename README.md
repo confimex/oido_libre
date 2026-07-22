@@ -87,7 +87,7 @@ La primera corrección incluye:
 - Límite interno de amplificación.
 - Guardado de los niveles de cada oído.
 - Recuperación de la última configuración al volver a abrir.
-- Apagado del micrófono cuando la aplicación pasa a segundo plano.
+- En la versión web, apagado del micrófono cuando la página pasa a segundo plano.
 - Sincronización entre la versión principal y Android.
 - Uso de la palabra **nivel** en lugar de **dB**, porque todavía no existe una calibración física en decibeles reales.
 
@@ -153,12 +153,25 @@ Los niveles del Control Principal ahora utilizan una escala progresiva entre 0 y
 
 Antes de esta corrección, Casa y Calle producían prácticamente el mismo volumen porque ambos perfiles alcanzaban inmediatamente el límite máximo. La calidad, potencia y respuesta de los audífonos Bluetooth sigue dependiendo del modelo; no se aumenta automáticamente el máximo porque los audífonos alámbricos pueden entregar una salida considerablemente mayor.
 
+## Piedrita 7 — Audio continuo Android 1.5 (OL-002)
+
+La amplificación de Android ya no depende de que la pantalla de la aplicación permanezca visible. La versión 1.5 incorpora un servicio nativo que:
+
+- Continúa activo al abrir otra aplicación o apagar la pantalla.
+- Muestra la notificación permanente **Oído Libre está activo**.
+- Incluye la acción **Detener** dentro de la notificación.
+- Conserva los niveles izquierdo y derecho mientras funciona.
+- Mantiene despierto únicamente el procesamiento de audio, no la pantalla.
+- Se detiene por seguridad si se desconectan los audífonos.
+
+El servicio debe iniciarse mientras Oído Libre está visible. Android no permite que una aplicación inicie silenciosamente el micrófono desde el fondo.
+
 ## Próximas piedritas
 
-1. Subir la versión 1.1 al repositorio conectado con Vercel.
-2. Generar el primer APK de prueba desde Android Studio.
-3. Probar OL-001 en un teléfono real con audífonos alámbricos y Bluetooth.
-4. Revisar qué micrófono utiliza el teléfono.
+1. Compilar Android 1.5 y comprobar la notificación permanente.
+2. Probar durante cinco minutos con la pantalla apagada.
+3. Probar durante cinco minutos usando otra aplicación.
+4. Confirmar que el botón **Detener** apaga el audio.
 5. Preparar los recursos visuales para funcionamiento sin Internet.
 6. Documentar los modelos de audífonos recomendados.
 

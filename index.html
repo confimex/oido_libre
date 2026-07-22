@@ -246,6 +246,18 @@
     return window.Capacitor?.Plugins?.AudioRoute || null;
   }
 
+  function hearingAmplifierPlugin() {
+    return window.Capacitor?.Plugins?.HearingAmplifier || null;
+  }
+
+  function showMicState(active) {
+    isMicActive = active;
+    micButton.classList.toggle("bg-red-600", active);
+    micButton.classList.toggle("bg-[#2ECC71]", !active);
+    micButtonText.textContent = active ? "DESACTIVAR" : "ACTIVAR";
+    micStatus.textContent = active ? "Micrófono activo" : "Micrófono apagado";
+  }
+
   function showAudioRoute(route) {
     headphonesConnected = Boolean(route?.headphonesConnected);
 
@@ -310,6 +322,16 @@
     if (plugin) {
       await plugin.addListener("audioRouteChanged", route => showAudioRoute(route));
     }
+
+    const amplifier = hearingAmplifierPlugin();
+    if (amplifier) {
+      try {
+        const state = await amplifier.getState();
+        showMicState(Boolean(state.active));
+      } catch (error) {
+        console.warn("No se pudo recuperar el estado del amplificador", error);
+      }
+    }
   }
 
   function levelToGain(level) {
@@ -321,6 +343,15 @@
   }
 
   function updateGain(rampSeconds = 0.08) {
+    const nativeAmplifier = hearingAmplifierPlugin();
+    if (isNativeAndroidApp() && nativeAmplifier && isMicActive) {
+      nativeAmplifier.updateLevels({
+        leftLevel: Number(leftSlider.value),
+        rightLevel: Number(rightSlider.value)
+      }).catch(error => console.error("No se pudieron actualizar los niveles", error));
+      return;
+    }
+
     if (!audioContext) return;
 
     const now = audioContext.currentTime;
@@ -380,6 +411,16 @@
 
       micStatus.textContent = "Pidiendo permiso de micrófono...";
 
+      const nativeAmplifier = hearingAmplifierPlugin();
+      if (isNativeAndroidApp() && nativeAmplifier) {
+        await nativeAmplifier.start({
+          leftLevel: Number(leftSlider.value),
+          rightLevel: Number(rightSlider.value)
+        });
+        showMicState(true);
+        return;
+      }
+
       micStream = await navigator.mediaDevices.getUserMedia({
         audio: {
           echoCancellation: false,
@@ -419,12 +460,7 @@
 
       updateGain(START_RAMP_SECONDS);
 
-      isMicActive = true;
-
-      micButton.classList.remove("bg-[#2ECC71]");
-      micButton.classList.add("bg-red-600");
-      micButtonText.textContent = "DESACTIVAR";
-      micStatus.textContent = "Micrófono activo";
+      showMicState(true);
     } catch (error) {
       micStatus.textContent = "No se pudo activar el micrófono";
       const detail = error?.name ? "\n\nDetalle: " + error.name : "";
@@ -433,7 +469,18 @@
     }
   }
 
-  function stopMic() {
+  async function stopMic() {
+    const nativeAmplifier = hearingAmplifierPlugin();
+    if (isNativeAndroidApp() && nativeAmplifier) {
+      try {
+        await nativeAmplifier.stop();
+      } catch (error) {
+        console.error("No se pudo detener el amplificador", error);
+      }
+      showMicState(false);
+      return;
+    }
+
     if (micStream) micStream.getTracks().forEach(track => track.stop());
     if (source) try { source.disconnect(); } catch (error) {}
     if (leftGainNode) try { leftGainNode.disconnect(); } catch (error) {}
@@ -451,12 +498,7 @@
     leftPannerNode = null;
     rightPannerNode = null;
     limiterNode = null;
-    isMicActive = false;
-
-    micButton.classList.remove("bg-red-600");
-    micButton.classList.add("bg-[#2ECC71]");
-    micButtonText.textContent = "ACTIVAR";
-    micStatus.textContent = "Micrófono apagado";
+    showMicState(false);
   }
 
   micButton.addEventListener("click", () => {
@@ -724,11 +766,11 @@ profileCalle.addEventListener("click", () => {
 saveSettingsButton.addEventListener("click", () => saveSettings(true));
 
 document.addEventListener("visibilitychange", () => {
-  if (document.hidden && isMicActive) stopMic();
+  if (!isNativeAndroidApp() && document.hidden && isMicActive) stopMic();
 });
 
 window.addEventListener("pagehide", () => {
-  if (isMicActive) stopMic();
+  if (!isNativeAndroidApp() && isMicActive) stopMic();
 });
 
 loadSettings();
