@@ -130,6 +130,29 @@ La versión Android 1.2 incorpora:
 
 La prueba auditiva realizada con la versión 1.1 debe repetirse, porque los canales estaban intercambiados y sus resultados por oído no son válidos para ajustar el perfil definitivo.
 
+## Piedrita 5 — Separación estéreo Android 1.3
+
+La separación mediante `ChannelMerger` no fue consistente dentro del WebView de Android: un canal podía aparecer intercambiado o quedar sin sonido. La versión 1.3 utiliza `StereoPanner` tanto en el Control Principal como en la prueba:
+
+- Rama izquierda fijada explícitamente a la posición `-1`.
+- Rama derecha fijada explícitamente a la posición `+1`.
+- Controles de ganancia independientes antes del limitador.
+- Tonos de prueba dirigidos mediante el mismo sistema estéreo.
+
+La prueba debe repetirse con audífonos alámbricos y después con Bluetooth. Si un modelo convierte internamente la señal a mono, deberá registrarse como no compatible con la separación por oído.
+
+## Piedrita 6 — Escala progresiva y perfiles Android 1.4
+
+Los niveles del Control Principal ahora utilizan una escala progresiva entre 0 y 45:
+
+- Nivel 0 silencia el canal.
+- Los niveles bajos producen cambios pequeños.
+- Los niveles altos aumentan progresivamente sin rebasar el límite interno.
+- Casa aplica niveles 36 izquierdo y 34 derecho.
+- Calle aplica niveles 20 izquierdo y 18 derecho.
+
+Antes de esta corrección, Casa y Calle producían prácticamente el mismo volumen porque ambos perfiles alcanzaban inmediatamente el límite máximo. La calidad, potencia y respuesta de los audífonos Bluetooth sigue dependiendo del modelo; no se aumenta automáticamente el máximo porque los audífonos alámbricos pueden entregar una salida considerablemente mayor.
+
 ## Próximas piedritas
 
 1. Subir la versión 1.1 al repositorio conectado con Vercel.

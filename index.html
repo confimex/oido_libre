@@ -197,8 +197,6 @@
 </nav>
 
 <script>
-  const CANALES_INVERTIDOS = false;
-
   function showScreen(screenId, button) {
     document.querySelectorAll(".screen").forEach(screen => screen.classList.remove("active"));
     document.getElementById(screenId).classList.add("active");
@@ -230,7 +228,8 @@
   let source = null;
   let leftGainNode = null;
   let rightGainNode = null;
-  let mergerNode = null;
+  let leftPannerNode = null;
+  let rightPannerNode = null;
   let limiterNode = null;
   let isMicActive = false;
 
@@ -313,8 +312,12 @@
     }
   }
 
-  function dbToGain(db) {
-    return Math.min(Math.pow(10, db / 20), MAX_SAFE_GAIN);
+  function levelToGain(level) {
+    const normalizedLevel = Math.max(0, Math.min(Number(level), 45));
+    if (normalizedLevel === 0) return 0.0001;
+
+    const progressiveGain = 1 + (MAX_SAFE_GAIN - 1) * Math.pow(normalizedLevel / 45, 2);
+    return Math.min(progressiveGain, MAX_SAFE_GAIN);
   }
 
   function updateGain(rampSeconds = 0.08) {
@@ -328,8 +331,8 @@
       node.gain.exponentialRampToValueAtTime(value, now + rampSeconds);
     };
 
-    setGain(leftGainNode, dbToGain(Number(leftSlider.value)));
-    setGain(rightGainNode, dbToGain(Number(rightSlider.value)));
+    setGain(leftGainNode, levelToGain(leftSlider.value));
+    setGain(rightGainNode, levelToGain(rightSlider.value));
   }
 
   function refreshLevelLabels() {
@@ -390,11 +393,14 @@
 
       leftGainNode = audioContext.createGain();
       rightGainNode = audioContext.createGain();
-      mergerNode = audioContext.createChannelMerger(2);
+      leftPannerNode = audioContext.createStereoPanner();
+      rightPannerNode = audioContext.createStereoPanner();
       limiterNode = audioContext.createDynamicsCompressor();
 
       leftGainNode.gain.setValueAtTime(0.0001, audioContext.currentTime);
       rightGainNode.gain.setValueAtTime(0.0001, audioContext.currentTime);
+      leftPannerNode.pan.setValueAtTime(-1, audioContext.currentTime);
+      rightPannerNode.pan.setValueAtTime(1, audioContext.currentTime);
 
       limiterNode.threshold.setValueAtTime(-6, audioContext.currentTime);
       limiterNode.knee.setValueAtTime(0, audioContext.currentTime);
@@ -405,15 +411,10 @@
       source.connect(leftGainNode);
       source.connect(rightGainNode);
 
-      if (CANALES_INVERTIDOS) {
-        leftGainNode.connect(mergerNode, 0, 1);
-        rightGainNode.connect(mergerNode, 0, 0);
-      } else {
-        leftGainNode.connect(mergerNode, 0, 0);
-        rightGainNode.connect(mergerNode, 0, 1);
-      }
-
-      mergerNode.connect(limiterNode);
+      leftGainNode.connect(leftPannerNode);
+      rightGainNode.connect(rightPannerNode);
+      leftPannerNode.connect(limiterNode);
+      rightPannerNode.connect(limiterNode);
       limiterNode.connect(audioContext.destination);
 
       updateGain(START_RAMP_SECONDS);
@@ -437,7 +438,8 @@
     if (source) try { source.disconnect(); } catch (error) {}
     if (leftGainNode) try { leftGainNode.disconnect(); } catch (error) {}
     if (rightGainNode) try { rightGainNode.disconnect(); } catch (error) {}
-    if (mergerNode) try { mergerNode.disconnect(); } catch (error) {}
+    if (leftPannerNode) try { leftPannerNode.disconnect(); } catch (error) {}
+    if (rightPannerNode) try { rightPannerNode.disconnect(); } catch (error) {}
     if (limiterNode) try { limiterNode.disconnect(); } catch (error) {}
     if (audioContext) audioContext.close();
 
@@ -446,7 +448,8 @@
     source = null;
     leftGainNode = null;
     rightGainNode = null;
-    mergerNode = null;
+    leftPannerNode = null;
+    rightPannerNode = null;
     limiterNode = null;
     isMicActive = false;
 
@@ -464,7 +467,7 @@
   let testAudioContext = null;
   let oscillator = null;
   let testGain = null;
-  let testMerger = null;
+  let testPanner = null;
   let currentTestStep = 0;
   let currentLevelIndex = 0;
 
@@ -548,26 +551,18 @@
 
     oscillator = testAudioContext.createOscillator();
     testGain = testAudioContext.createGain();
-    testMerger = testAudioContext.createChannelMerger(2);
+    testPanner = testAudioContext.createStereoPanner();
 
     oscillator.type = "sine";
     oscillator.frequency.value = step.freq;
 
     const finalGain = Math.min(level.gain * step.boost, 0.75);
     testGain.gain.value = finalGain;
+    testPanner.pan.value = step.side === "left" ? -1 : 1;
 
     oscillator.connect(testGain);
-
-    let canalSalida;
-
-    if (step.side === "left") {
-      canalSalida = CANALES_INVERTIDOS ? 1 : 0;
-    } else {
-      canalSalida = CANALES_INVERTIDOS ? 0 : 1;
-    }
-
-    testGain.connect(testMerger, 0, canalSalida);
-    testMerger.connect(testAudioContext.destination);
+    testGain.connect(testPanner);
+    testPanner.connect(testAudioContext.destination);
 
     oscillator.start();
 
@@ -586,9 +581,9 @@
       testGain = null;
     }
 
-    if (testMerger) {
-      try { testMerger.disconnect(); } catch (error) {}
-      testMerger = null;
+    if (testPanner) {
+      try { testPanner.disconnect(); } catch (error) {}
+      testPanner = null;
     }
 
     if (testAudioContext) {
@@ -719,11 +714,11 @@ function aplicarPerfil(nombre, leftValue, rightValue) {
 }
 
 profileCasa.addEventListener("click", () => {
-  aplicarPerfil("Casa", 34, 32);
+  aplicarPerfil("Casa", 36, 34);
 });
 
 profileCalle.addEventListener("click", () => {
-  aplicarPerfil("Calle", 24, 22);
+  aplicarPerfil("Calle", 20, 18);
 });
 
 saveSettingsButton.addEventListener("click", () => saveSettings(true));
