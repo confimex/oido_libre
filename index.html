@@ -10,11 +10,23 @@
   <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet">
 
   <style>
-    body { font-family: "Atkinson Hyperlegible Next", sans-serif; background:#F5F7FF; }
+    html { overflow-x:hidden; }
+    body {
+      font-family: "Atkinson Hyperlegible Next", sans-serif;
+      background:#F5F7FF;
+      overflow-x:hidden;
+      min-height:100dvh;
+    }
     .material-symbols-outlined { font-size:34px; }
     .screen { display:none; }
     .screen.active { display:block; }
     .nav-btn.active { background:#DBEAFE; color:#0053CD; border-radius:999px; }
+    .nav-btn { min-width:0; flex:1 1 0; padding:.5rem .2rem; }
+    .nav-label { font-size:.8rem; line-height:1.05; overflow-wrap:anywhere; }
+    .app-header { min-height:4rem; height:auto; }
+    .app-main { padding-top:6.5rem; padding-bottom:13rem; }
+    .accessible-button { min-height:4.75rem; height:auto; padding:1rem; white-space:normal; }
+    .wrap-anywhere { overflow-wrap:anywhere; word-break:normal; }
     input[type="range"] { width:100%; height:40px; accent-color:#0053CD; }
 
     .ear-left {
@@ -25,12 +37,18 @@
     .ear-right {
       display: inline-block;
     }
+
+    @media (max-width:480px) {
+      .ear-grid { grid-template-columns:1fr; }
+      .ear-card { padding:1.15rem; }
+      .ear-level { font-size:2.25rem; line-height:1.1; }
+    }
   </style>
 </head>
 
 <body class="text-[#191B24]">
 
-<header class="fixed top-0 left-0 w-full h-16 bg-white shadow-sm z-50 flex items-center justify-between px-5">
+<header class="app-header fixed top-0 left-0 w-full bg-white shadow-sm z-50 flex items-center justify-between px-5 py-2">
   <div class="flex items-center gap-2">
     <span class="material-symbols-outlined text-[#0053CD]">hearing</span>
     <h1 class="text-2xl font-extrabold">OídoLibre</h1>
@@ -38,29 +56,41 @@
   <span class="material-symbols-outlined text-gray-600">account_circle</span>
 </header>
 
-<main class="pt-24 pb-40 px-4 max-w-md mx-auto">
+<main class="app-main px-4 max-w-md mx-auto">
 
   <section id="control" class="screen active">
     <h2 class="text-4xl font-extrabold mb-2">Control Principal</h2>
     <p class="text-xl text-gray-500 mb-6">Ajusta cada oído por separado.</p>
 
-    <div class="grid grid-cols-2 gap-4 mb-6">
-      <div class="bg-[#0053CD] text-white rounded-[28px] p-5 text-center shadow-xl">
+    <div class="ear-grid grid grid-cols-2 gap-4 mb-6">
+      <div class="ear-card bg-[#0053CD] text-white rounded-[28px] p-5 text-center shadow-xl">
         <span class="material-symbols-outlined text-6xl ear-left">hearing</span>
         <h3 class="text-2xl font-bold mt-3">Oído Izquierdo</h3>
         <p class="bg-white/20 rounded-full py-2 mt-3 font-bold">MÁS FUERTE</p>
-        <p id="leftDb" class="text-5xl font-extrabold mt-5">+14 nivel</p>
+        <p id="leftDb" class="ear-level text-5xl font-extrabold mt-5 wrap-anywhere">+14 nivel</p>
         <input id="leftSlider" type="range" min="0" max="45" value="14" class="mt-5">
       </div>
 
-      <div class="bg-[#F57C00] text-white rounded-[28px] p-5 text-center shadow-xl">
+      <div class="ear-card bg-[#F57C00] text-white rounded-[28px] p-5 text-center shadow-xl">
         <span class="material-symbols-outlined text-6xl ear-right">hearing</span>
         <h3 class="text-2xl font-bold mt-3">Oído Derecho</h3>
         <p class="bg-white/20 rounded-full py-2 mt-3 font-bold">NIVEL MEDIO</p>
-        <p id="rightDb" class="text-5xl font-extrabold mt-5">+8 nivel</p>
+        <p id="rightDb" class="ear-level text-5xl font-extrabold mt-5 wrap-anywhere">+8 nivel</p>
         <input id="rightSlider" type="range" min="0" max="45" value="8" class="mt-5">
       </div>
 
+    </div>
+
+    <div class="bg-white rounded-[28px] p-4 shadow mb-5">
+      <p class="text-2xl font-extrabold mb-3">¿Dónde estás?</p>
+      <div class="grid grid-cols-1 gap-3">
+        <button id="quickCasa" class="accessible-button w-full bg-blue-100 text-blue-900 rounded-[22px] text-left text-xl font-extrabold">
+          🏠 CASA — conversación cómoda
+        </button>
+        <button id="quickCalle" class="accessible-button w-full bg-orange-100 text-orange-900 rounded-[22px] text-left text-xl font-extrabold">
+          🚶 CALLE — menos ruido
+        </button>
+      </div>
     </div>
 
     <div id="audioRouteCard" class="bg-yellow-100 text-yellow-900 rounded-[24px] p-4 mb-5">
@@ -68,7 +98,7 @@
       <p id="audioRouteDetail" class="text-lg">La amplificación permanecerá apagada mientras revisamos la conexión.</p>
     </div>
 
-    <button id="micButton" class="w-full h-20 bg-[#2ECC71] text-white rounded-[28px] shadow-xl flex items-center justify-center gap-3">
+    <button id="micButton" class="accessible-button w-full bg-[#2ECC71] text-white rounded-[28px] shadow-xl flex items-center justify-center gap-3">
       <span class="material-symbols-outlined text-5xl">volume_up</span>
       <div class="text-left">
         <p id="micButtonText" class="text-2xl font-extrabold">ACTIVAR</p>
@@ -76,7 +106,7 @@
       </div>
     </button>
 
-    <button id="saveSettingsButton" class="w-full h-16 bg-white text-[#0053CD] rounded-[22px] shadow mt-5 font-extrabold text-xl">
+    <button id="saveSettingsButton" class="accessible-button w-full bg-white text-[#0053CD] rounded-[22px] shadow mt-5 font-extrabold text-xl">
       💾 Guardar configuración
     </button>
 
@@ -99,7 +129,7 @@
       <p class="text-xl mb-3">Si no lo escuchas, toca <strong>NO LO ESCUCHÉ</strong>.</p>
       <p class="text-xl mb-5">Cuando lo escuches, toca <strong>SÍ LO ESCUCHÉ</strong>.</p>
 
-      <button id="startTestButton" class="w-full h-16 bg-[#0053CD] text-white rounded-[22px] text-xl font-extrabold">
+      <button id="startTestButton" class="accessible-button w-full bg-[#0053CD] text-white rounded-[22px] text-xl font-extrabold">
         COMENZAR PRUEBA
       </button>
     </div>
@@ -161,12 +191,12 @@
     <h2 class="text-4xl font-extrabold mb-2">Perfiles</h2>
     <p class="text-xl text-gray-500 mb-6">Elige dónde estás.</p>
 
-   <button id="profileCasa" class="w-full bg-white rounded-[28px] p-5 shadow mb-4 text-left">
+   <button id="profileCasa" class="accessible-button w-full bg-white rounded-[28px] p-5 shadow mb-4 text-left">
      <p class="text-2xl font-extrabold">🏠 Casa</p>
      <p class="text-xl text-gray-500">Sonido cómodo para conversación</p>
    </button>
 
-   <button id="profileCalle" class="w-full bg-white rounded-[28px] p-5 shadow mb-4 text-left">
+   <button id="profileCalle" class="accessible-button w-full bg-white rounded-[28px] p-5 shadow mb-4 text-left">
      <p class="text-2xl font-extrabold">🚶 Calle</p>
      <p class="text-xl text-gray-500">Menos amplificación para evitar ruido</p>
    </button>
@@ -182,16 +212,16 @@
 <nav class="fixed bottom-0 left-0 w-full bg-white rounded-t-[32px] shadow-[0_-8px_30px_rgba(0,0,0,0.08)] px-3 pt-3 pb-6 z-50">
   <div class="flex justify-around items-center">
     <button onclick="showScreen('control', this)" class="nav-btn active flex flex-col items-center px-4 py-2">
-      <span class="material-symbols-outlined">graphic_eq</span><span class="font-bold text-sm">Control</span>
+      <span class="material-symbols-outlined">graphic_eq</span><span class="nav-label font-bold">Control</span>
     </button>
     <button onclick="showScreen('prueba', this)" class="nav-btn flex flex-col items-center px-4 py-2 text-gray-500">
-      <span class="material-symbols-outlined">equalizer</span><span class="font-bold text-sm">Prueba</span>
+      <span class="material-symbols-outlined">equalizer</span><span class="nav-label font-bold">Prueba</span>
     </button>
     <button onclick="showScreen('ajustes', this)" class="nav-btn flex flex-col items-center px-4 py-2 text-gray-500">
-      <span class="material-symbols-outlined">settings</span><span class="font-bold text-sm">Ajustes</span>
+      <span class="material-symbols-outlined">settings</span><span class="nav-label font-bold">Ajustes</span>
     </button>
     <button onclick="showScreen('perfiles', this)" class="nav-btn flex flex-col items-center px-4 py-2 text-gray-500">
-      <span class="material-symbols-outlined">person_search</span><span class="font-bold text-sm">Perfiles</span>
+      <span class="material-symbols-outlined">person_search</span><span class="nav-label font-bold">Perfiles</span>
     </button>
   </div>
 </nav>
@@ -277,18 +307,20 @@
       audioRouteDetail.textContent = route.label || "Salida de audio segura";
       micButton.disabled = false;
       micButton.classList.remove("opacity-50");
+      if (isMicActive) micStatus.textContent = "Micrófono activo";
       return;
     }
 
     audioRouteCard.classList.add("bg-red-100", "text-red-800");
-    audioRouteTitle.textContent = "⚠ Conecta tus audífonos";
-    audioRouteDetail.textContent = "La amplificación está bloqueada para evitar que el sonido salga por la bocina.";
-    micButton.disabled = true;
-    micButton.classList.add("opacity-50");
+    audioRouteTitle.textContent = isMicActive ? "⏸ Esperando audífonos" : "⚠ Conecta tus audífonos";
+    audioRouteDetail.textContent = isMicActive
+      ? "Oído Libre está en pausa y se reanudará automáticamente al conectar los audífonos."
+      : "La amplificación está bloqueada para evitar que el sonido salga por la bocina.";
+    micButton.disabled = !isMicActive;
+    micButton.classList.toggle("opacity-50", !isMicActive);
 
     if (isMicActive) {
-      stopMic();
-      alert("Los audífonos se desconectaron. La amplificación se apagó por seguridad.");
+      micStatus.textContent = "En pausa; esperando audífonos";
     }
   }
 
@@ -463,8 +495,7 @@
       showMicState(true);
     } catch (error) {
       micStatus.textContent = "No se pudo activar el micrófono";
-      const detail = error?.name ? "\n\nDetalle: " + error.name : "";
-      alert("No se pudo activar el micrófono. Revisa el permiso de Oído Libre." + detail);
+      alert("Oído Libre necesita permiso para escuchar el ambiente. Pulsa ACTIVAR nuevamente y elige PERMITIR.");
       console.error(error);
     }
   }
@@ -739,8 +770,10 @@
       resetTest();
     }
   });
-  const profileCasa = document.getElementById("profileCasa");
+const profileCasa = document.getElementById("profileCasa");
 const profileCalle = document.getElementById("profileCalle");
+const quickCasa = document.getElementById("quickCasa");
+const quickCalle = document.getElementById("quickCalle");
 const saveSettingsButton = document.getElementById("saveSettingsButton");
 
 function aplicarPerfil(nombre, leftValue, rightValue) {
@@ -760,6 +793,14 @@ profileCasa.addEventListener("click", () => {
 });
 
 profileCalle.addEventListener("click", () => {
+  aplicarPerfil("Calle", 20, 18);
+});
+
+quickCasa.addEventListener("click", () => {
+  aplicarPerfil("Casa", 36, 34);
+});
+
+quickCalle.addEventListener("click", () => {
   aplicarPerfil("Calle", 20, 18);
 });
 

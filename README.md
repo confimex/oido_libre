@@ -166,9 +166,22 @@ La amplificación de Android ya no depende de que la pantalla de la aplicación 
 
 El servicio debe iniciarse mientras Oído Libre está visible. Android no permite que una aplicación inicie silenciosamente el micrófono desde el fondo.
 
+## Piedrita 8 — Uso automático y accesible Android 1.6
+
+La versión 1.6 facilita el uso cotidiano para personas mayores:
+
+- Al guardar los audífonos en su cargador, la amplificación entra en pausa sin apagarse.
+- Al volver a conectar los audífonos, el sonido se reanuda automáticamente con los niveles guardados.
+- La notificación cambia entre **Oído Libre está activo** y **Oído Libre espera tus audífonos**.
+- El botón **Detener** apaga completamente el servicio cuando la persona así lo decide.
+- Los perfiles Casa y Calle aparecen también en el Control Principal.
+- Las pantallas admiten desplazamiento y dejan espacio suficiente sobre el menú inferior.
+- Los controles se acomodan en una sola columna en teléfonos, incluso con la fuente de Android al máximo.
+- Al tocar **ACTIVAR**, Android solicita automáticamente los permisos de micrófono y notificaciones cuando hagan falta.
+
 ## Próximas piedritas
 
-1. Compilar Android 1.5 y comprobar la notificación permanente.
+1. Compilar Android 1.6 y comprobar la pausa y reanudación automática.
 2. Probar durante cinco minutos con la pantalla apagada.
 3. Probar durante cinco minutos usando otra aplicación.
 4. Confirmar que el botón **Detener** apaga el audio.

@@ -37,6 +37,7 @@ public class HearingAmplifierService extends Service {
     private static final float MAX_GAIN = 4.0f;
 
     private static volatile boolean running = false;
+    private static volatile boolean paused = false;
     private volatile int leftLevel = 0;
     private volatile int rightLevel = 0;
     private volatile boolean audioLoopRunning = false;
@@ -50,6 +51,10 @@ public class HearingAmplifierService extends Service {
 
     public static boolean isRunning() {
         return running;
+    }
+
+    public static boolean isPaused() {
+        return paused;
     }
 
     @Override
@@ -75,16 +80,17 @@ public class HearingAmplifierService extends Service {
 
         if (ACTION_UPDATE.equals(action)) return START_STICKY;
 
+        running = true;
+        paused = !hasHeadphones();
         startInForeground();
-        if (!running) startAmplifier();
+        if (!paused) startAudioEngine();
         return START_STICKY;
     }
 
     private void startInForeground() {
-        Notification notification = buildNotification();
         int type = Build.VERSION.SDK_INT >= Build.VERSION_CODES.R
                 ? ServiceInfo.FOREGROUND_SERVICE_TYPE_MICROPHONE : 0;
-        ServiceCompat.startForeground(this, NOTIFICATION_ID, notification, type);
+        ServiceCompat.startForeground(this, NOTIFICATION_ID, buildNotification(), type);
     }
 
     private Notification buildNotification() {
@@ -97,10 +103,15 @@ public class HearingAmplifierService extends Service {
         PendingIntent stopPendingIntent = PendingIntent.getService(
                 this, 2, stopIntent, PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
 
+        String title = paused ? "Oído Libre espera tus audífonos" : "Oído Libre está activo";
+        String text = paused
+                ? "Se reanudará automáticamente cuando vuelvas a conectarlos"
+                : "Amplificación por audífonos en funcionamiento";
+
         return new NotificationCompat.Builder(this, CHANNEL_ID)
                 .setSmallIcon(android.R.drawable.ic_btn_speak_now)
-                .setContentTitle("Oído Libre está activo")
-                .setContentText("Amplificación por audífonos en funcionamiento")
+                .setContentTitle(title)
+                .setContentText(text)
                 .setContentIntent(openPendingIntent)
                 .setOngoing(true)
                 .setOnlyAlertOnce(true)
@@ -109,23 +120,30 @@ public class HearingAmplifierService extends Service {
                 .build();
     }
 
+    private void updateNotification() {
+        NotificationManager manager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+        manager.notify(NOTIFICATION_ID, buildNotification());
+    }
+
     private void createNotificationChannel() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             NotificationChannel channel = new NotificationChannel(
                     CHANNEL_ID, "Oído Libre activo", NotificationManager.IMPORTANCE_LOW);
-            channel.setDescription("Indica que la amplificación auditiva continúa activa");
+            channel.setDescription("Indica si la amplificación está activa o esperando audífonos");
             getSystemService(NotificationManager.class).createNotificationChannel(channel);
         }
     }
 
-    private void startAmplifier() {
+    private synchronized void startAudioEngine() {
+        if (!running || !hasHeadphones() || audioLoopRunning) return;
+
         int inputMin = AudioRecord.getMinBufferSize(SAMPLE_RATE,
                 AudioFormat.CHANNEL_IN_MONO, AudioFormat.ENCODING_PCM_16BIT);
         int outputMin = AudioTrack.getMinBufferSize(SAMPLE_RATE,
                 AudioFormat.CHANNEL_OUT_STEREO, AudioFormat.ENCODING_PCM_16BIT);
         int frames = Math.max(1024, Math.max(inputMin / 2, outputMin / 4));
 
-        recorder = new AudioRecord.Builder()
+        AudioRecord newRecorder = new AudioRecord.Builder()
                 .setAudioSource(MediaRecorder.AudioSource.VOICE_RECOGNITION)
                 .setAudioFormat(new AudioFormat.Builder()
                         .setEncoding(AudioFormat.ENCODING_PCM_16BIT)
@@ -135,7 +153,7 @@ public class HearingAmplifierService extends Service {
                 .setBufferSizeInBytes(frames * 2)
                 .build();
 
-        player = new AudioTrack.Builder()
+        AudioTrack newPlayer = new AudioTrack.Builder()
                 .setAudioAttributes(new AudioAttributes.Builder()
                         .setUsage(AudioAttributes.USAGE_ASSISTANCE_ACCESSIBILITY)
                         .setContentType(AudioAttributes.CONTENT_TYPE_SPEECH)
@@ -149,38 +167,74 @@ public class HearingAmplifierService extends Service {
                 .setTransferMode(AudioTrack.MODE_STREAM)
                 .build();
 
-        if (recorder.getState() != AudioRecord.STATE_INITIALIZED || player.getState() != AudioTrack.STATE_INITIALIZED) {
-            stopAmplifier();
+        if (newRecorder.getState() != AudioRecord.STATE_INITIALIZED
+                || newPlayer.getState() != AudioTrack.STATE_INITIALIZED) {
+            newRecorder.release();
+            newPlayer.release();
+            pauseAmplifier();
             return;
         }
 
+        recorder = newRecorder;
+        player = newPlayer;
         acquireWakeLock();
         recorder.startRecording();
         player.play();
-        running = true;
+        paused = false;
         audioLoopRunning = true;
 
-        final int bufferFrames = frames;
-        audioThread = new Thread(() -> runAudioLoop(bufferFrames), "OidoLibreAudio");
+        final AudioRecord loopRecorder = recorder;
+        final AudioTrack loopPlayer = player;
+        audioThread = new Thread(
+                () -> runAudioLoop(loopRecorder, loopPlayer, frames), "OidoLibreAudio");
         audioThread.start();
+        updateNotification();
     }
 
-    private void runAudioLoop(int frames) {
+    private void runAudioLoop(AudioRecord input, AudioTrack output, int frames) {
         short[] mono = new short[frames];
         short[] stereo = new short[frames * 2];
 
-        while (audioLoopRunning) {
-            int read = recorder.read(mono, 0, mono.length, AudioRecord.READ_BLOCKING);
-            if (read <= 0) continue;
+        try {
+            while (audioLoopRunning) {
+                int read = input.read(mono, 0, mono.length, AudioRecord.READ_BLOCKING);
+                if (read <= 0) continue;
 
-            float leftGain = levelToGain(leftLevel);
-            float rightGain = levelToGain(rightLevel);
-            for (int i = 0; i < read; i++) {
-                stereo[i * 2] = amplify(mono[i], leftGain);
-                stereo[i * 2 + 1] = amplify(mono[i], rightGain);
+                float leftGain = levelToGain(leftLevel);
+                float rightGain = levelToGain(rightLevel);
+                for (int i = 0; i < read; i++) {
+                    stereo[i * 2] = amplify(mono[i], leftGain);
+                    stereo[i * 2 + 1] = amplify(mono[i], rightGain);
+                }
+                output.write(stereo, 0, read * 2, AudioTrack.WRITE_BLOCKING);
             }
-            player.write(stereo, 0, read * 2, AudioTrack.WRITE_BLOCKING);
+        } catch (Exception ignored) {
+            // Al pausar, Android interrumpe de forma normal la lectura bloqueada.
         }
+    }
+
+    private synchronized void pauseAmplifier() {
+        if (!running) return;
+        paused = true;
+        releaseAudioEngine();
+        updateNotification();
+    }
+
+    private void releaseAudioEngine() {
+        audioLoopRunning = false;
+        if (recorder != null) {
+            try { recorder.stop(); } catch (Exception ignored) {}
+            recorder.release();
+            recorder = null;
+        }
+        if (player != null) {
+            try { player.stop(); } catch (Exception ignored) {}
+            player.release();
+            player = null;
+        }
+        audioThread = null;
+        if (wakeLock != null && wakeLock.isHeld()) wakeLock.release();
+        wakeLock = null;
     }
 
     private short amplify(short sample, float gain) {
@@ -199,6 +253,7 @@ public class HearingAmplifierService extends Service {
     }
 
     private void acquireWakeLock() {
+        if (wakeLock != null && wakeLock.isHeld()) return;
         PowerManager powerManager = (PowerManager) getSystemService(Context.POWER_SERVICE);
         wakeLock = powerManager.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "OidoLibre:Amplifier");
         wakeLock.acquire();
@@ -208,8 +263,13 @@ public class HearingAmplifierService extends Service {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) return;
         deviceCallback = new AudioDeviceCallback() {
             @Override
+            public void onAudioDevicesAdded(AudioDeviceInfo[] addedDevices) {
+                if (running && paused && hasHeadphones()) startAudioEngine();
+            }
+
+            @Override
             public void onAudioDevicesRemoved(AudioDeviceInfo[] removedDevices) {
-                if (running && !hasHeadphones()) stopAmplifier();
+                if (running && !hasHeadphones()) pauseAmplifier();
             }
         };
         audioManager.registerAudioDeviceCallback(deviceCallback, null);
@@ -232,32 +292,21 @@ public class HearingAmplifierService extends Service {
     }
 
     private synchronized void stopAmplifier() {
-        audioLoopRunning = false;
         running = false;
-        if (recorder != null) {
-            try { recorder.stop(); } catch (Exception ignored) {}
-            recorder.release();
-            recorder = null;
-        }
-        if (player != null) {
-            try { player.stop(); } catch (Exception ignored) {}
-            player.release();
-            player = null;
-        }
-        if (wakeLock != null && wakeLock.isHeld()) wakeLock.release();
-        wakeLock = null;
+        paused = false;
+        releaseAudioEngine();
         ServiceCompat.stopForeground(this, ServiceCompat.STOP_FOREGROUND_REMOVE);
         stopSelf();
     }
 
     @Override
     public void onDestroy() {
-        audioLoopRunning = false;
         running = false;
+        paused = false;
+        releaseAudioEngine();
         if (audioManager != null && deviceCallback != null && Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             audioManager.unregisterAudioDeviceCallback(deviceCallback);
         }
-        if (wakeLock != null && wakeLock.isHeld()) wakeLock.release();
         super.onDestroy();
     }
 
