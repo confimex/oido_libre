@@ -3,7 +3,9 @@ package com.oidolibre.app;
 import android.Manifest;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.net.Uri;
 import android.os.Build;
+import android.provider.Settings;
 
 import androidx.core.content.ContextCompat;
 
@@ -95,6 +97,15 @@ public class HearingAmplifierPlugin extends Plugin {
         result.put("active", HearingAmplifierService.isRunning());
         result.put("paused", HearingAmplifierService.isPaused());
         call.resolve(result);
+    }
+
+    @PluginMethod
+    public void openAppSettings(PluginCall call) {
+        Intent intent = new Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS);
+        intent.setData(Uri.parse("package:" + getContext().getPackageName()));
+        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+        getContext().startActivity(intent);
+        call.resolve();
     }
 
     private int safeLevel(int level) {

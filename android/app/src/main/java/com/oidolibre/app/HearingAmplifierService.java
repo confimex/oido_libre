@@ -33,7 +33,9 @@ public class HearingAmplifierService extends Service {
 
     private static final String CHANNEL_ID = "oido_libre_active";
     private static final int NOTIFICATION_ID = 1501;
-    private static final int SAMPLE_RATE = 48000;
+    private static final int FALLBACK_SAMPLE_RATE = 48000;
+    private static final int FALLBACK_FRAMES_PER_BURST = 192;
+    private static final int MAX_PROCESS_FRAMES = 256;
     private static final float MAX_GAIN = 4.0f;
 
     private static volatile boolean running = false;
@@ -137,35 +139,52 @@ public class HearingAmplifierService extends Service {
     private synchronized void startAudioEngine() {
         if (!running || !hasHeadphones() || audioLoopRunning) return;
 
-        int inputMin = AudioRecord.getMinBufferSize(SAMPLE_RATE,
+        int sampleRate = getNativeSampleRate();
+        int framesPerBurst = getFramesPerBurst();
+        // Procesar lotes pequeños evita acumular ~20 ms o más antes de reproducir.
+        // Los buffers internos siguen siendo suficientemente grandes para evitar cortes.
+        int processFrames = Math.max(64, Math.min(MAX_PROCESS_FRAMES, framesPerBurst));
+
+        int inputMin = AudioRecord.getMinBufferSize(sampleRate,
                 AudioFormat.CHANNEL_IN_MONO, AudioFormat.ENCODING_PCM_16BIT);
-        int outputMin = AudioTrack.getMinBufferSize(SAMPLE_RATE,
+        int outputMin = AudioTrack.getMinBufferSize(sampleRate,
                 AudioFormat.CHANNEL_OUT_STEREO, AudioFormat.ENCODING_PCM_16BIT);
-        int frames = Math.max(1024, Math.max(inputMin / 2, outputMin / 4));
+        if (inputMin <= 0 || outputMin <= 0) {
+            pauseAmplifier();
+            return;
+        }
+
+        int recorderBufferBytes = Math.max(inputMin, processFrames * 2 * 2);
+        int playerBufferBytes = Math.max(outputMin, processFrames * 2 * 2 * 2);
 
         AudioRecord newRecorder = new AudioRecord.Builder()
                 .setAudioSource(MediaRecorder.AudioSource.VOICE_RECOGNITION)
                 .setAudioFormat(new AudioFormat.Builder()
                         .setEncoding(AudioFormat.ENCODING_PCM_16BIT)
-                        .setSampleRate(SAMPLE_RATE)
+                        .setSampleRate(sampleRate)
                         .setChannelMask(AudioFormat.CHANNEL_IN_MONO)
                         .build())
-                .setBufferSizeInBytes(frames * 2)
+                .setBufferSizeInBytes(recorderBufferBytes)
                 .build();
 
-        AudioTrack newPlayer = new AudioTrack.Builder()
+        AudioTrack.Builder playerBuilder = new AudioTrack.Builder()
                 .setAudioAttributes(new AudioAttributes.Builder()
                         .setUsage(AudioAttributes.USAGE_ASSISTANCE_ACCESSIBILITY)
                         .setContentType(AudioAttributes.CONTENT_TYPE_SPEECH)
                         .build())
                 .setAudioFormat(new AudioFormat.Builder()
                         .setEncoding(AudioFormat.ENCODING_PCM_16BIT)
-                        .setSampleRate(SAMPLE_RATE)
+                        .setSampleRate(sampleRate)
                         .setChannelMask(AudioFormat.CHANNEL_OUT_STEREO)
                         .build())
-                .setBufferSizeInBytes(frames * 4)
-                .setTransferMode(AudioTrack.MODE_STREAM)
-                .build();
+                .setBufferSizeInBytes(playerBufferBytes)
+                .setTransferMode(AudioTrack.MODE_STREAM);
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            playerBuilder.setPerformanceMode(AudioTrack.PERFORMANCE_MODE_LOW_LATENCY);
+        }
+
+        AudioTrack newPlayer = playerBuilder.build();
 
         if (newRecorder.getState() != AudioRecord.STATE_INITIALIZED
                 || newPlayer.getState() != AudioTrack.STATE_INITIALIZED) {
@@ -174,6 +193,11 @@ public class HearingAmplifierService extends Service {
             pauseAmplifier();
             return;
         }
+
+        // Dos ráfagas es un buen punto de partida entre latencia y estabilidad.
+        // Android ajustará el valor si el dispositivo necesita un mínimo mayor.
+        int targetBufferFrames = Math.max(processFrames * 2, framesPerBurst * 2);
+        newPlayer.setBufferSizeInFrames(targetBufferFrames);
 
         recorder = newRecorder;
         player = newPlayer;
@@ -186,12 +210,13 @@ public class HearingAmplifierService extends Service {
         final AudioRecord loopRecorder = recorder;
         final AudioTrack loopPlayer = player;
         audioThread = new Thread(
-                () -> runAudioLoop(loopRecorder, loopPlayer, frames), "OidoLibreAudio");
+                () -> runAudioLoop(loopRecorder, loopPlayer, processFrames), "OidoLibreAudio");
         audioThread.start();
         updateNotification();
     }
 
     private void runAudioLoop(AudioRecord input, AudioTrack output, int frames) {
+        android.os.Process.setThreadPriority(android.os.Process.THREAD_PRIORITY_URGENT_AUDIO);
         short[] mono = new short[frames];
         short[] stereo = new short[frames * 2];
 
@@ -210,6 +235,26 @@ public class HearingAmplifierService extends Service {
             }
         } catch (Exception ignored) {
             // Al pausar, Android interrumpe de forma normal la lectura bloqueada.
+        }
+    }
+
+    private int getNativeSampleRate() {
+        String value = audioManager.getProperty(AudioManager.PROPERTY_OUTPUT_SAMPLE_RATE);
+        return positiveInt(value, FALLBACK_SAMPLE_RATE);
+    }
+
+    private int getFramesPerBurst() {
+        String value = audioManager.getProperty(AudioManager.PROPERTY_OUTPUT_FRAMES_PER_BUFFER);
+        return positiveInt(value, FALLBACK_FRAMES_PER_BURST);
+    }
+
+    private int positiveInt(String value, int fallback) {
+        if (value == null) return fallback;
+        try {
+            int parsed = Integer.parseInt(value);
+            return parsed > 0 ? parsed : fallback;
+        } catch (NumberFormatException ignored) {
+            return fallback;
         }
     }
 

@@ -14,7 +14,7 @@ El archivo principal de la aplicación es:
 
 Ahí se encuentran juntas:
 
-- Las cuatro pantallas.
+- Las tres secciones principales.
 - El diseño y los colores.
 - El control del micrófono.
 - La prueba con tonos.
@@ -179,14 +179,41 @@ La versión 1.6 facilita el uso cotidiano para personas mayores:
 - Los controles se acomodan en una sola columna en teléfonos, incluso con la fuente de Android al máximo.
 - Al tocar **ACTIVAR**, Android solicita automáticamente los permisos de micrófono y notificaciones cuando hagan falta.
 
+## Piedrita 9 — Interfaz accesible Android 1.6.1
+
+La versión 1.6.1 reorganiza OídoLibre para que pueda usarse con el tamaño de fuente y visualización de Android al máximo:
+
+- Menú inferior reducido a **Escuchar**, **Prueba** y **Más**.
+- Encabezado compacto para dejar más espacio al contenido.
+- Controles izquierdo y derecho colocados uno debajo del otro.
+- Botones grandes **−** y **+** para ajustar cada oído.
+- Casa y Calle visibles en la pantalla principal y con selección claramente marcada.
+- Guardado automático de niveles, sin depender de un botón adicional.
+- Tarjetas de altura flexible y desplazamiento hasta el final de cada pantalla.
+- Instrucciones de la prueba más cortas y ordenadas.
+- Mensaje de permiso con acceso directo a los ajustes de OídoLibre.
+- Recursos visuales principales incluidos en la aplicación para no depender de Internet.
+
+## Piedrita 10 — Baja latencia Android 1.7
+
+La versión 1.7 reduce el retraso entre lo que capta el micrófono y lo que llega a los audífonos sin cambiar los niveles ni los perfiles ya probados:
+
+- El audio deja de procesarse obligatoriamente en bloques de 1024 muestras y utiliza bloques pequeños adaptados al teléfono.
+- Se usa la frecuencia de salida nativa informada por Android para evitar conversiones innecesarias.
+- En Android 8 o superior se solicita explícitamente el modo de reproducción de baja latencia.
+- El hilo de procesamiento recibe prioridad de audio para disminuir pausas provocadas por otras tareas del teléfono.
+- El búfer de reproducción se ajusta a dos ráfagas como punto de partida entre respuesta rápida y estabilidad.
+- Se conservan el funcionamiento en segundo plano, la pausa/reanudación al conectar audífonos, los canales izquierdo/derecho y los perfiles Casa/Calle.
+
+Bluetooth todavía puede añadir retraso propio del enlace inalámbrico. Para medir la mejora de OídoLibre, primero se recomienda comparar 1.6.1 contra 1.7 con los mismos audífonos alámbricos y el mismo teléfono.
+
 ## Próximas piedritas
 
-1. Compilar Android 1.6 y comprobar la pausa y reanudación automática.
-2. Probar durante cinco minutos con la pantalla apagada.
-3. Probar durante cinco minutos usando otra aplicación.
-4. Confirmar que el botón **Detener** apaga el audio.
-5. Preparar los recursos visuales para funcionamiento sin Internet.
-6. Documentar los modelos de audífonos recomendados.
+1. Comparar el retraso de Android 1.7 contra 1.6.1 con audífonos alámbricos.
+2. Repetir la comparación con Bluetooth.
+3. Probar una conversación de dos o tres personas y comprobar que las voces se enciman menos.
+4. Confirmar que la pausa/reanudación automática y el botón **Detener** siguen funcionando.
+5. Si aún existe un retraso perceptible con cable, evaluar el siguiente salto del motor de audio a Oboe/AAudio nativo.
 
 ## Respaldo antes de modificar
 

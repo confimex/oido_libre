@@ -5,224 +5,213 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>OídoLibre</title>
 
-  <script src="https://cdn.tailwindcss.com"></script>
-  <link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible+Next:wght@400;600;700;800&display=swap" rel="stylesheet">
-  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet">
-
   <style>
-    html { overflow-x:hidden; }
+    :root {
+      --blue:#075FD8;
+      --blue-dark:#073B84;
+      --orange:#E96800;
+      --green:#18864B;
+      --red:#B42318;
+      --ink:#182033;
+      --muted:#596579;
+      --surface:#FFFFFF;
+      --background:#F4F7FC;
+      --line:#DDE4EE;
+      font-family: Atkinson Hyperlegible, Arial, system-ui, sans-serif;
+      color:var(--ink);
+      background:var(--background);
+    }
+    * { box-sizing:border-box; }
+    html { overflow-x:hidden; scroll-behavior:smooth; }
     body {
-      font-family: "Atkinson Hyperlegible Next", sans-serif;
-      background:#F5F7FF;
+      margin:0;
+      font-family:inherit;
+      background:var(--background);
       overflow-x:hidden;
       min-height:100dvh;
+      font-size:1rem;
+      line-height:1.45;
     }
-    .material-symbols-outlined { font-size:34px; }
     .screen { display:none; }
     .screen.active { display:block; }
-    .nav-btn.active { background:#DBEAFE; color:#0053CD; border-radius:999px; }
-    .nav-btn { min-width:0; flex:1 1 0; padding:.5rem .2rem; }
-    .nav-label { font-size:.8rem; line-height:1.05; overflow-wrap:anywhere; }
-    .app-header { min-height:4rem; height:auto; }
-    .app-main { padding-top:6.5rem; padding-bottom:13rem; }
-    .accessible-button { min-height:4.75rem; height:auto; padding:1rem; white-space:normal; }
-    .wrap-anywhere { overflow-wrap:anywhere; word-break:normal; }
-    input[type="range"] { width:100%; height:40px; accent-color:#0053CD; }
-
-    .ear-left {
-      transform: scaleX(-1);
-      display: inline-block;
+    .hidden { display:none !important; }
+    button, input { font:inherit; }
+    button { cursor:pointer; touch-action:manipulation; }
+    button:focus-visible, input:focus-visible { outline:4px solid #F5B700; outline-offset:3px; }
+    button:disabled { cursor:not-allowed; opacity:.5; }
+    .app-header {
+      position:sticky; top:0; z-index:50; min-height:4.25rem;
+      display:flex; align-items:center; justify-content:center;
+      padding:.6rem 1rem; background:#fff; border-bottom:1px solid var(--line);
     }
-
-    .ear-right {
-      display: inline-block;
-    }
-
-    @media (max-width:480px) {
-      .ear-grid { grid-template-columns:1fr; }
-      .ear-card { padding:1.15rem; }
-      .ear-level { font-size:2.25rem; line-height:1.1; }
-    }
+    .brand { display:flex; align-items:center; gap:.55rem; min-width:0; }
+    .brand-ear { color:var(--blue); font-size:2.5rem; line-height:1; }
+    .brand-name { margin:0; font-size:clamp(1.55rem,7vw,2rem); line-height:1; font-weight:800; white-space:nowrap; }
+    .app-main { width:min(100%,34rem); margin:0 auto; padding:1rem 1rem 9rem; }
+    .page-title { margin:.25rem 0 .25rem; font-size:clamp(1.65rem,8vw,2.35rem); line-height:1.08; font-weight:800; }
+    .page-subtitle { margin:0 0 1rem; color:var(--muted); font-size:clamp(1.05rem,5vw,1.3rem); }
+    .card { background:var(--surface); border:1px solid var(--line); border-radius:1.35rem; padding:1rem; margin-bottom:1rem; box-shadow:0 4px 14px rgba(28,42,70,.07); }
+    .status-card { border-width:2px; }
+    .status-card.safe { background:#EAF8F0; border-color:#74C99A; color:#125C35; }
+    .status-card.wait { background:#FFF4E5; border-color:#F1B45E; color:#784000; }
+    .status-card.stop { background:#FFF0EF; border-color:#E49A94; color:#7A1C16; }
+    .status-title { margin:0 0 .2rem; font-size:clamp(1.2rem,6vw,1.55rem); line-height:1.2; font-weight:800; }
+    .status-detail { margin:0; font-size:clamp(1rem,4.5vw,1.15rem); }
+    .primary-action { width:100%; min-height:5rem; border:0; border-radius:1.35rem; padding:1rem; color:#fff; background:var(--green); font-size:clamp(1.35rem,7vw,1.8rem); font-weight:800; box-shadow:0 6px 16px rgba(0,0,0,.12); }
+    .primary-action.active { background:var(--red); }
+    .action-note { display:block; font-size:.75em; font-weight:600; margin-top:.15rem; }
+    .section-title { margin:0 0 .75rem; font-size:clamp(1.25rem,6vw,1.55rem); line-height:1.2; font-weight:800; }
+    .profile-grid { display:grid; grid-template-columns:1fr; gap:.75rem; }
+    .profile-button { width:100%; min-height:4.5rem; border:2px solid var(--line); border-radius:1.1rem; padding:.8rem 1rem; background:#fff; color:var(--ink); text-align:left; font-weight:800; font-size:clamp(1.15rem,5vw,1.35rem); }
+    .profile-button.selected { border-color:var(--blue); background:#EAF2FF; color:var(--blue-dark); }
+    .profile-help { display:block; margin-top:.15rem; color:var(--muted); font-size:.82em; font-weight:600; }
+    .ear-stack { display:grid; grid-template-columns:1fr; gap:.9rem; }
+    .ear-card { border-radius:1.35rem; padding:1rem; color:#fff; }
+    .ear-card.left { background:var(--blue); }
+    .ear-card.right { background:var(--orange); }
+    .ear-heading { display:flex; align-items:center; justify-content:space-between; gap:.75rem; flex-wrap:wrap; }
+    .ear-title { margin:0; font-size:clamp(1.25rem,6vw,1.55rem); font-weight:800; }
+    .ear-level { margin:0; font-size:clamp(1.35rem,7vw,1.8rem); font-weight:800; white-space:nowrap; }
+    .range-row { display:grid; grid-template-columns:3.2rem 1fr 3.2rem; gap:.55rem; align-items:center; margin-top:.6rem; }
+    .range-step { min-height:3.2rem; border:2px solid rgba(255,255,255,.8); border-radius:.8rem; color:#fff; background:rgba(255,255,255,.16); font-size:1.8rem; font-weight:800; }
+    input[type="range"] { width:100%; min-width:0; height:3rem; accent-color:#fff; }
+    .saved-message { min-height:1.5rem; margin:.55rem 0 0; color:#176C40; font-weight:800; text-align:center; }
+    .instruction-list { margin:0; padding-left:1.45rem; }
+    .instruction-list li { margin:.65rem 0; padding-left:.25rem; font-size:clamp(1.05rem,5vw,1.25rem); }
+    .test-button { width:100%; min-height:4.5rem; margin:.45rem 0; border:0; border-radius:1rem; padding:.8rem; color:#fff; font-size:clamp(1.15rem,5.5vw,1.4rem); font-weight:800; }
+    .test-button.blue { background:var(--blue); }
+    .test-button.purple { background:#7137A8; }
+    .test-button.green { background:var(--green); }
+    .test-button.orange { background:var(--orange); }
+    .test-button.light { background:#E7ECF3; color:var(--ink); }
+    .test-button.danger { background:#FCE9E7; color:#8B211A; }
+    .progress-track { width:100%; height:1rem; margin-top:1rem; overflow:hidden; border-radius:999px; background:#DCE3ED; }
+    .progress-bar { height:100%; border-radius:999px; background:var(--blue); transition:width .2s ease; }
+    .result-card { background:#fff; border:2px solid #91B8F2; border-radius:1.35rem; padding:1rem; margin-top:1rem; }
+    .result-card h3 { margin:0 0 .75rem; font-size:clamp(1.35rem,6vw,1.65rem); }
+    .result-card p { font-size:clamp(1.05rem,5vw,1.25rem); }
+    .equalizer-item { padding:.8rem 0; border-bottom:1px solid var(--line); }
+    .equalizer-item:last-child { border-bottom:0; }
+    .equalizer-label { display:flex; justify-content:space-between; gap:.75rem; align-items:center; flex-wrap:wrap; font-size:clamp(1.1rem,5vw,1.3rem); font-weight:800; }
+    .permission-help { display:none; }
+    .permission-help.visible { display:block; }
+    .bottom-nav { position:fixed; left:0; right:0; bottom:0; z-index:60; padding:.45rem .6rem max(.55rem, env(safe-area-inset-bottom)); background:#fff; border-top:1px solid var(--line); box-shadow:0 -5px 18px rgba(24,32,51,.1); }
+    .bottom-nav-inner { width:min(100%,34rem); margin:auto; display:grid; grid-template-columns:repeat(3,1fr); gap:.35rem; }
+    .nav-btn { min-width:0; min-height:4.6rem; border:0; border-radius:1rem; padding:.4rem .2rem; background:#fff; color:#536174; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:.15rem; }
+    .nav-btn.active { background:#E2EDFF; color:var(--blue-dark); }
+    .nav-icon { font-size:1.7rem; line-height:1; }
+    .nav-label { font-size:clamp(.8rem,3.8vw,1rem); line-height:1.05; font-weight:800; white-space:nowrap; }
+    .sr-only { position:absolute; width:1px; height:1px; padding:0; margin:-1px; overflow:hidden; clip:rect(0,0,0,0); white-space:nowrap; border:0; }
+    @media (min-width:32rem) { .profile-grid { grid-template-columns:1fr 1fr; } }
+    @media (max-width:22rem) { .app-main { padding-inline:.65rem; } .nav-label { font-size:.76rem; } }
   </style>
 </head>
 
-<body class="text-[#191B24]">
+<body>
 
-<header class="app-header fixed top-0 left-0 w-full bg-white shadow-sm z-50 flex items-center justify-between px-5 py-2">
-  <div class="flex items-center gap-2">
-    <span class="material-symbols-outlined text-[#0053CD]">hearing</span>
-    <h1 class="text-2xl font-extrabold">OídoLibre</h1>
+<header class="app-header">
+  <div class="brand" aria-label="OídoLibre">
+    <span class="brand-ear" aria-hidden="true">👂</span>
+    <h1 class="brand-name">OídoLibre</h1>
   </div>
-  <span class="material-symbols-outlined text-gray-600">account_circle</span>
 </header>
 
-<main class="app-main px-4 max-w-md mx-auto">
+<main class="app-main" id="mainContent">
 
   <section id="control" class="screen active">
-    <h2 class="text-4xl font-extrabold mb-2">Control Principal</h2>
-    <p class="text-xl text-gray-500 mb-6">Ajusta cada oído por separado.</p>
+    <h2 class="page-title">Escuchar</h2>
+    <p class="page-subtitle">Conecta tus audífonos y toca un botón.</p>
 
-    <div class="ear-grid grid grid-cols-2 gap-4 mb-6">
-      <div class="ear-card bg-[#0053CD] text-white rounded-[28px] p-5 text-center shadow-xl">
-        <span class="material-symbols-outlined text-6xl ear-left">hearing</span>
-        <h3 class="text-2xl font-bold mt-3">Oído Izquierdo</h3>
-        <p class="bg-white/20 rounded-full py-2 mt-3 font-bold">MÁS FUERTE</p>
-        <p id="leftDb" class="ear-level text-5xl font-extrabold mt-5 wrap-anywhere">+14 nivel</p>
-        <input id="leftSlider" type="range" min="0" max="45" value="14" class="mt-5">
-      </div>
-
-      <div class="ear-card bg-[#F57C00] text-white rounded-[28px] p-5 text-center shadow-xl">
-        <span class="material-symbols-outlined text-6xl ear-right">hearing</span>
-        <h3 class="text-2xl font-bold mt-3">Oído Derecho</h3>
-        <p class="bg-white/20 rounded-full py-2 mt-3 font-bold">NIVEL MEDIO</p>
-        <p id="rightDb" class="ear-level text-5xl font-extrabold mt-5 wrap-anywhere">+8 nivel</p>
-        <input id="rightSlider" type="range" min="0" max="45" value="8" class="mt-5">
-      </div>
-
+    <div id="audioRouteCard" class="card status-card wait" role="status" aria-live="polite">
+      <p id="audioRouteTitle" class="status-title">⌛ Revisando audífonos…</p>
+      <p id="audioRouteDetail" class="status-detail">OídoLibre verificará que el sonido salga de forma segura.</p>
     </div>
 
-    <div class="bg-white rounded-[28px] p-4 shadow mb-5">
-      <p class="text-2xl font-extrabold mb-3">¿Dónde estás?</p>
-      <div class="grid grid-cols-1 gap-3">
-        <button id="quickCasa" class="accessible-button w-full bg-blue-100 text-blue-900 rounded-[22px] text-left text-xl font-extrabold">
-          🏠 CASA — conversación cómoda
-        </button>
-        <button id="quickCalle" class="accessible-button w-full bg-orange-100 text-orange-900 rounded-[22px] text-left text-xl font-extrabold">
-          🚶 CALLE — menos ruido
-        </button>
-      </div>
-    </div>
-
-    <div id="audioRouteCard" class="bg-yellow-100 text-yellow-900 rounded-[24px] p-4 mb-5">
-      <p id="audioRouteTitle" class="font-extrabold text-xl">⌛ Revisando audífonos...</p>
-      <p id="audioRouteDetail" class="text-lg">La amplificación permanecerá apagada mientras revisamos la conexión.</p>
-    </div>
-
-    <button id="micButton" class="accessible-button w-full bg-[#2ECC71] text-white rounded-[28px] shadow-xl flex items-center justify-center gap-3">
-      <span class="material-symbols-outlined text-5xl">volume_up</span>
-      <div class="text-left">
-        <p id="micButtonText" class="text-2xl font-extrabold">ACTIVAR</p>
-        <p id="micStatus">Micrófono en tiempo real</p>
-      </div>
+    <button id="micButton" class="primary-action" aria-describedby="micStatus">
+      <span aria-hidden="true">🔊 </span><span id="micButtonText">ESCUCHAR</span>
+      <span id="micStatus" class="action-note">Micrófono apagado</span>
     </button>
 
-    <button id="saveSettingsButton" class="accessible-button w-full bg-white text-[#0053CD] rounded-[22px] shadow mt-5 font-extrabold text-xl">
-      💾 Guardar configuración
-    </button>
+    <div id="permissionHelp" class="card permission-help" role="alert">
+      <h3 class="section-title">Permite el micrófono</h3>
+      <p>OídoLibre necesita escuchar el ambiente para ayudarte.</p>
+      <button id="permissionButton" class="test-button blue">ABRIR PERMISOS</button>
+    </div>
 
-    <div class="bg-yellow-100 text-yellow-900 rounded-[24px] p-4 mt-5">
-      <p class="font-bold text-xl">Prueba inicial</p>
-      <p class="text-lg">Usa audífonos para evitar eco o chillido.</p>
+    <div class="card">
+      <h3 class="section-title">¿Dónde estás?</h3>
+      <div class="profile-grid">
+        <button id="quickCasa" class="profile-button" aria-pressed="false">🏠 CASA<span class="profile-help">Conversación cómoda</span></button>
+        <button id="quickCalle" class="profile-button" aria-pressed="false">🚶 CALLE<span class="profile-help">Menos ruido</span></button>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3 class="section-title">Volumen de cada oído</h3>
+      <div class="ear-stack">
+        <div class="ear-card left">
+          <div class="ear-heading"><h4 class="ear-title">👂 Oído izquierdo</h4><p id="leftDb" class="ear-level">Nivel 14</p></div>
+          <div class="range-row"><button class="range-step" data-slider="leftSlider" data-step="-1" aria-label="Bajar oído izquierdo">−</button><input id="leftSlider" aria-label="Nivel del oído izquierdo" type="range" min="0" max="45" value="14"><button class="range-step" data-slider="leftSlider" data-step="1" aria-label="Subir oído izquierdo">+</button></div>
+        </div>
+        <div class="ear-card right">
+          <div class="ear-heading"><h4 class="ear-title">👂 Oído derecho</h4><p id="rightDb" class="ear-level">Nivel 8</p></div>
+          <div class="range-row"><button class="range-step" data-slider="rightSlider" data-step="-1" aria-label="Bajar oído derecho">−</button><input id="rightSlider" aria-label="Nivel del oído derecho" type="range" min="0" max="45" value="8"><button class="range-step" data-slider="rightSlider" data-step="1" aria-label="Subir oído derecho">+</button></div>
+        </div>
+      </div>
+      <p id="savedMessage" class="saved-message" aria-live="polite"></p>
     </div>
   </section>
 
   <section id="prueba" class="screen">
-    <h2 class="text-4xl font-extrabold mb-2">Prueba para escuchar mejor</h2>
-    <p class="text-xl text-gray-500 mb-6">Vamos paso a paso.</p>
+    <h2 class="page-title">Prueba de audición</h2>
+    <p class="page-subtitle">Vamos paso a paso.</p>
 
-    <div id="instructionsCard" class="bg-white rounded-[28px] p-5 shadow mb-5">
-      <h3 class="text-2xl font-extrabold mb-3">Antes de comenzar</h3>
-
-      <p class="text-xl mb-3">🎧 Ponte los audífonos.</p>
-      <p class="text-xl mb-3">🔇 Busca un lugar tranquilo.</p>
-      <p class="text-xl mb-3">🔊 Escucharás pitidos suaves.</p>
-      <p class="text-xl mb-3">Si no lo escuchas, toca <strong>NO LO ESCUCHÉ</strong>.</p>
-      <p class="text-xl mb-5">Cuando lo escuches, toca <strong>SÍ LO ESCUCHÉ</strong>.</p>
-
-      <button id="startTestButton" class="accessible-button w-full bg-[#0053CD] text-white rounded-[22px] text-xl font-extrabold">
-        COMENZAR PRUEBA
-      </button>
+    <div id="instructionsCard" class="card">
+      <h3 class="section-title">Antes de comenzar</h3>
+      <ol class="instruction-list"><li>Ponte los audífonos.</li><li>Busca un lugar tranquilo.</li><li>Comenzaremos con el oído izquierdo.</li></ol>
+      <button id="startTestButton" class="test-button blue">COMENZAR</button>
     </div>
 
     <div id="testArea" class="hidden">
-      <div class="bg-white rounded-[28px] p-5 shadow mb-5">
-        <p class="text-2xl font-bold mb-2">Paso actual</p>
-        <p id="testStepText" class="text-xl text-gray-600"></p>
+      <div class="card">
+        <p class="section-title">Sonido actual</p>
+        <p id="testStepText" class="status-detail"></p>
 
-        <div class="w-full h-5 bg-gray-200 rounded-full mt-4">
-          <div id="testProgress" class="h-5 bg-[#0053CD] rounded-full" style="width: 0%"></div>
+        <div class="progress-track" aria-hidden="true">
+          <div id="testProgress" class="progress-bar" style="width: 0%"></div>
         </div>
       </div>
 
-      <button id="playToneButton" class="w-full h-20 bg-[#9C27B0] text-white rounded-[28px] text-2xl font-extrabold shadow mb-4">
-        🔊 REPRODUCIR TONO
-      </button>
+      <button id="playToneButton" class="test-button purple">🔊 REPRODUCIR SONIDO</button>
+      <button id="heardButton" class="test-button green">✅ SÍ ESCUCHÉ</button>
+      <button id="notHeardButton" class="test-button orange">❌ NO ESCUCHÉ</button>
+      <button id="stopToneButton" class="test-button light">⏹ DETENER SONIDO</button>
+      <button id="resetTestButton" class="test-button danger">↻ REINICIAR PRUEBA</button>
 
-      <button id="heardButton" class="w-full h-20 bg-[#2ECC71] text-white rounded-[28px] text-2xl font-extrabold shadow mb-4">
-        ✅ SÍ LO ESCUCHÉ
-      </button>
-
-      <button id="notHeardButton" class="w-full h-20 bg-orange-500 text-white rounded-[28px] text-2xl font-extrabold shadow mb-4">
-        ❌ NO LO ESCUCHÉ
-      </button>
-
-      <button id="stopToneButton" class="w-full h-16 bg-gray-200 rounded-[22px] text-xl font-bold mb-4">
-        ⏹ DETENER TONO
-      </button>
-
-      <button id="resetTestButton" class="w-full h-16 bg-red-100 text-red-700 rounded-[22px] text-xl font-extrabold mb-5">
-        🔄 REINICIAR PRUEBA
-      </button>
-
-      <div id="testResultCard" class="hidden bg-white rounded-[28px] p-5 shadow"></div>
+      <div id="testResultCard" class="hidden result-card"></div>
     </div>
   </section>
 
-  <section id="ajustes" class="screen">
-    <h2 class="text-4xl font-extrabold mb-2">Ajustes</h2>
-    <p class="text-xl text-gray-500 mb-6">Ecualizador simple.</p>
-
-    <div class="bg-white rounded-[28px] p-5 shadow">
-      <label class="text-xl font-bold">250 Hz Graves</label>
-      <input id="eqLow" type="range" min="-12" max="12" value="4">
-
-      <label class="text-xl font-bold">1 kHz Voz</label>
-      <input id="eqMid" type="range" min="-12" max="12" value="0">
-
-      <label class="text-xl font-bold">4 kHz Claridad</label>
-      <input id="eqHigh" type="range" min="-12" max="12" value="8">
-
-      <label class="text-xl font-bold">8 kHz Agudos</label>
-      <input id="eqAir" type="range" min="-12" max="12" value="-2">
+  <section id="mas" class="screen">
+    <h2 class="page-title">Más ajustes</h2>
+    <p class="page-subtitle">Modifica solamente si lo necesitas.</p>
+    <div class="card">
+      <h3 class="section-title">Tipo de sonido</h3>
+      <div class="equalizer-item"><label class="equalizer-label" for="eqLow"><span>Sonidos graves</span><span>250 Hz</span></label><input id="eqLow" type="range" min="-12" max="12" value="4"></div>
+      <div class="equalizer-item"><label class="equalizer-label" for="eqMid"><span>Voces</span><span>1 kHz</span></label><input id="eqMid" type="range" min="-12" max="12" value="0"></div>
+      <div class="equalizer-item"><label class="equalizer-label" for="eqHigh"><span>Claridad</span><span>4 kHz</span></label><input id="eqHigh" type="range" min="-12" max="12" value="8"></div>
+      <div class="equalizer-item"><label class="equalizer-label" for="eqAir"><span>Sonidos agudos</span><span>8 kHz</span></label><input id="eqAir" type="range" min="-12" max="12" value="-2"></div>
     </div>
-  </section>
-
-  <section id="perfiles" class="screen">
-    <h2 class="text-4xl font-extrabold mb-2">Perfiles</h2>
-    <p class="text-xl text-gray-500 mb-6">Elige dónde estás.</p>
-
-   <button id="profileCasa" class="accessible-button w-full bg-white rounded-[28px] p-5 shadow mb-4 text-left">
-     <p class="text-2xl font-extrabold">🏠 Casa</p>
-     <p class="text-xl text-gray-500">Sonido cómodo para conversación</p>
-   </button>
-
-   <button id="profileCalle" class="accessible-button w-full bg-white rounded-[28px] p-5 shadow mb-4 text-left">
-     <p class="text-2xl font-extrabold">🚶 Calle</p>
-     <p class="text-xl text-gray-500">Menos amplificación para evitar ruido</p>
-   </button>
-
-    <div class="bg-red-100 text-red-800 rounded-[28px] p-5 mt-5">
-      <p class="text-xl font-bold">Aviso importante</p>
-      <p class="text-lg">Esta app no reemplaza un audífono médico certificado.</p>
-    </div>
+    <div class="card status-card stop"><p class="status-title">Aviso importante</p><p class="status-detail">OídoLibre ayuda a escuchar el ambiente, pero no sustituye una valoración médica.</p></div>
   </section>
 
 </main>
 
-<nav class="fixed bottom-0 left-0 w-full bg-white rounded-t-[32px] shadow-[0_-8px_30px_rgba(0,0,0,0.08)] px-3 pt-3 pb-6 z-50">
-  <div class="flex justify-around items-center">
-    <button onclick="showScreen('control', this)" class="nav-btn active flex flex-col items-center px-4 py-2">
-      <span class="material-symbols-outlined">graphic_eq</span><span class="nav-label font-bold">Control</span>
-    </button>
-    <button onclick="showScreen('prueba', this)" class="nav-btn flex flex-col items-center px-4 py-2 text-gray-500">
-      <span class="material-symbols-outlined">equalizer</span><span class="nav-label font-bold">Prueba</span>
-    </button>
-    <button onclick="showScreen('ajustes', this)" class="nav-btn flex flex-col items-center px-4 py-2 text-gray-500">
-      <span class="material-symbols-outlined">settings</span><span class="nav-label font-bold">Ajustes</span>
-    </button>
-    <button onclick="showScreen('perfiles', this)" class="nav-btn flex flex-col items-center px-4 py-2 text-gray-500">
-      <span class="material-symbols-outlined">person_search</span><span class="nav-label font-bold">Perfiles</span>
-    </button>
+<nav class="bottom-nav" aria-label="Navegación principal">
+  <div class="bottom-nav-inner">
+    <button onclick="showScreen('control', this)" class="nav-btn active" aria-current="page"><span class="nav-icon" aria-hidden="true">👂</span><span class="nav-label">Escuchar</span></button>
+    <button onclick="showScreen('prueba', this)" class="nav-btn"><span class="nav-icon" aria-hidden="true">📊</span><span class="nav-label">Prueba</span></button>
+    <button onclick="showScreen('mas', this)" class="nav-btn"><span class="nav-icon" aria-hidden="true">⚙️</span><span class="nav-label">Más</span></button>
   </div>
 </nav>
 
@@ -233,11 +222,11 @@
 
     document.querySelectorAll(".nav-btn").forEach(btn => {
       btn.classList.remove("active");
-      btn.classList.add("text-gray-500");
+      btn.removeAttribute("aria-current");
     });
 
     button.classList.add("active");
-    button.classList.remove("text-gray-500");
+    button.setAttribute("aria-current", "page");
     window.scrollTo({ top: 0, behavior: "smooth" });
   }
 
@@ -252,6 +241,9 @@
   const audioRouteCard = document.getElementById("audioRouteCard");
   const audioRouteTitle = document.getElementById("audioRouteTitle");
   const audioRouteDetail = document.getElementById("audioRouteDetail");
+  const permissionHelp = document.getElementById("permissionHelp");
+  const permissionButton = document.getElementById("permissionButton");
+  const savedMessage = document.getElementById("savedMessage");
 
   let audioContext = null;
   let micStream = null;
@@ -267,6 +259,8 @@
   const MAX_SAFE_GAIN = 4;
   const START_RAMP_SECONDS = 1.5;
   let headphonesConnected = false;
+  let selectedProfile = localStorage.getItem("oidolibre-profile") || "";
+  let savedMessageTimer = null;
 
   function isNativeAndroidApp() {
     return Boolean(window.Capacitor?.isNativePlatform?.());
@@ -282,19 +276,19 @@
 
   function showMicState(active) {
     isMicActive = active;
-    micButton.classList.toggle("bg-red-600", active);
-    micButton.classList.toggle("bg-[#2ECC71]", !active);
-    micButtonText.textContent = active ? "DESACTIVAR" : "ACTIVAR";
-    micStatus.textContent = active ? "Micrófono activo" : "Micrófono apagado";
+    micButton.classList.toggle("active", active);
+    micButtonText.textContent = active ? "DETENER" : "ESCUCHAR";
+    micStatus.textContent = active ? "OídoLibre está funcionando" : "Micrófono apagado";
+    micButton.querySelector("span[aria-hidden]").textContent = active ? "⏹ " : "🔊 ";
   }
 
   function showAudioRoute(route) {
     headphonesConnected = Boolean(route?.headphonesConnected);
 
-    audioRouteCard.classList.remove("bg-yellow-100", "text-yellow-900", "bg-green-100", "text-green-900", "bg-red-100", "text-red-800");
+    audioRouteCard.classList.remove("safe", "wait", "stop");
 
     if (!isNativeAndroidApp()) {
-      audioRouteCard.classList.add("bg-yellow-100", "text-yellow-900");
+      audioRouteCard.classList.add("wait");
       audioRouteTitle.textContent = "⚠ Modo navegador";
       audioRouteDetail.textContent = "La detección automática funcionará en la aplicación Android. Usa audífonos antes de activar.";
       headphonesConnected = true;
@@ -302,7 +296,7 @@
     }
 
     if (headphonesConnected) {
-      audioRouteCard.classList.add("bg-green-100", "text-green-900");
+      audioRouteCard.classList.add("safe");
       audioRouteTitle.textContent = "✓ Audífonos conectados correctamente";
       audioRouteDetail.textContent = route.label || "Salida de audio segura";
       micButton.disabled = false;
@@ -311,13 +305,12 @@
       return;
     }
 
-    audioRouteCard.classList.add("bg-red-100", "text-red-800");
+    audioRouteCard.classList.add("stop");
     audioRouteTitle.textContent = isMicActive ? "⏸ Esperando audífonos" : "⚠ Conecta tus audífonos";
     audioRouteDetail.textContent = isMicActive
       ? "Oído Libre está en pausa y se reanudará automáticamente al conectar los audífonos."
       : "La amplificación está bloqueada para evitar que el sonido salga por la bocina.";
     micButton.disabled = !isMicActive;
-    micButton.classList.toggle("opacity-50", !isMicActive);
 
     if (isMicActive) {
       micStatus.textContent = "En pausa; esperando audífonos";
@@ -399,8 +392,8 @@
   }
 
   function refreshLevelLabels() {
-    leftDb.textContent = "+" + leftSlider.value + " nivel";
-    rightDb.textContent = "+" + rightSlider.value + " nivel";
+    leftDb.textContent = "Nivel " + leftSlider.value;
+    rightDb.textContent = "Nivel " + rightSlider.value;
   }
 
   function loadSettings() {
@@ -415,22 +408,39 @@
     }
   }
 
-  function saveSettings(showConfirmation = true) {
+  function showSavedMessage() {
+    savedMessage.textContent = "✓ Ajustes guardados";
+    clearTimeout(savedMessageTimer);
+    savedMessageTimer = setTimeout(() => { savedMessage.textContent = ""; }, 1800);
+  }
+
+  function saveSettings(showConfirmation = false) {
     localStorage.setItem(SETTINGS_KEY, JSON.stringify({
       left: Number(leftSlider.value),
       right: Number(rightSlider.value)
     }));
-    if (showConfirmation) alert("Configuración guardada");
+    if (showConfirmation) showSavedMessage();
   }
 
   leftSlider.addEventListener("input", () => {
     refreshLevelLabels();
     updateGain();
+    saveSettings(true);
   });
 
   rightSlider.addEventListener("input", () => {
     refreshLevelLabels();
     updateGain();
+    saveSettings(true);
+  });
+
+  document.querySelectorAll(".range-step").forEach(button => {
+    button.addEventListener("click", () => {
+      const slider = document.getElementById(button.dataset.slider);
+      const next = Math.max(Number(slider.min), Math.min(Number(slider.max), Number(slider.value) + Number(button.dataset.step)));
+      slider.value = next;
+      slider.dispatchEvent(new Event("input"));
+    });
   });
 
   async function startMic() {
@@ -449,6 +459,7 @@
           leftLevel: Number(leftSlider.value),
           rightLevel: Number(rightSlider.value)
         });
+        permissionHelp.classList.remove("visible");
         showMicState(true);
         return;
       }
@@ -495,7 +506,8 @@
       showMicState(true);
     } catch (error) {
       micStatus.textContent = "No se pudo activar el micrófono";
-      alert("Oído Libre necesita permiso para escuchar el ambiente. Pulsa ACTIVAR nuevamente y elige PERMITIR.");
+      permissionHelp.classList.add("visible");
+      permissionHelp.scrollIntoView({ behavior: "smooth", block: "center" });
       console.error(error);
     }
   }
@@ -535,6 +547,15 @@
   micButton.addEventListener("click", () => {
     if (isMicActive) stopMic();
     else startMic();
+  });
+
+  permissionButton.addEventListener("click", async () => {
+    const plugin = hearingAmplifierPlugin();
+    if (isNativeAndroidApp() && plugin?.openAppSettings) {
+      try { await plugin.openAppSettings(); } catch (error) { console.error(error); }
+    } else {
+      alert("Abre Ajustes del teléfono, busca OídoLibre y permite el micrófono.");
+    }
   });
 
   let testAudioContext = null;
@@ -725,23 +746,23 @@
     testResultCard.classList.remove("hidden");
 
     testResultCard.innerHTML = `
-      <h3 class="text-2xl font-extrabold mb-3">Resultado</h3>
+      <h3>Resultado</h3>
 
-      <p class="text-xl mb-3">
+      <p>
         Encontramos una configuración para ayudarte a escuchar mejor.
       </p>
 
-      <p class="text-xl mb-2">
+      <p>
         Oído izquierdo: <strong>nivel ${leftAverage}</strong>
       </p>
 
-      <p class="text-xl mb-4">
+      <p>
         Oído derecho: <strong>nivel ${rightAverage}</strong>
       </p>
 
       <button
         id="applyResultsButtonNew"
-        class="w-full h-16 bg-[#0053CD] text-white rounded-[22px] text-xl font-extrabold"
+        class="test-button blue"
       >
         Aplicar configuración
       </button>
@@ -770,11 +791,16 @@
       resetTest();
     }
   });
-const profileCasa = document.getElementById("profileCasa");
-const profileCalle = document.getElementById("profileCalle");
 const quickCasa = document.getElementById("quickCasa");
 const quickCalle = document.getElementById("quickCalle");
-const saveSettingsButton = document.getElementById("saveSettingsButton");
+
+function refreshProfileButtons() {
+  [[quickCasa, "Casa"], [quickCalle, "Calle"]].forEach(([button, name]) => {
+    const selected = selectedProfile === name;
+    button.classList.toggle("selected", selected);
+    button.setAttribute("aria-pressed", String(selected));
+  });
+}
 
 function aplicarPerfil(nombre, leftValue, rightValue) {
   leftSlider.value = leftValue;
@@ -783,18 +809,11 @@ function aplicarPerfil(nombre, leftValue, rightValue) {
   refreshLevelLabels();
 
   updateGain();
-  saveSettings(false);
-
-  alert("Perfil " + nombre + " aplicado");
+  saveSettings(true);
+  selectedProfile = nombre;
+  localStorage.setItem("oidolibre-profile", nombre);
+  refreshProfileButtons();
 }
-
-profileCasa.addEventListener("click", () => {
-  aplicarPerfil("Casa", 36, 34);
-});
-
-profileCalle.addEventListener("click", () => {
-  aplicarPerfil("Calle", 20, 18);
-});
 
 quickCasa.addEventListener("click", () => {
   aplicarPerfil("Casa", 36, 34);
@@ -803,8 +822,6 @@ quickCasa.addEventListener("click", () => {
 quickCalle.addEventListener("click", () => {
   aplicarPerfil("Calle", 20, 18);
 });
-
-saveSettingsButton.addEventListener("click", () => saveSettings(true));
 
 document.addEventListener("visibilitychange", () => {
   if (!isNativeAndroidApp() && document.hidden && isMicActive) stopMic();
@@ -816,6 +833,7 @@ window.addEventListener("pagehide", () => {
 
 loadSettings();
 refreshLevelLabels();
+refreshProfileButtons();
 monitorAudioRoute();
 
 </script>
